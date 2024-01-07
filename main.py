@@ -1,10 +1,10 @@
 import random
 import numpy as np
 import math
-from src.tx.enc.encode import encode
+# from src.tx.enc.encode import encode
 from src.lib.supp.readfile_polar_rel_idx import readfile_polar_rel_idx
 from src.lib.supp.create_decoding_schedule import create_decoding_schedule
-
+print(np.__version__)
 # Set random seed
 np.random.seed(919) 
 random.seed(918)
@@ -42,7 +42,7 @@ polar_enc_matrix = polar_enc_matrix_core  # Identity matrix as the initial value
 
 for _ in range(len_logn-1):
     polar_enc_matrix = np.kron(polar_enc_matrix, polar_enc_matrix_core)
-    
+
 vec_encoded = (polar_enc_matrix @ vec_uncoded % 2)
 
 # Modulate the encoded vector
@@ -79,10 +79,12 @@ vec_llr = 2.0 * vec_rx / awgn_var                         # Get LLRs of the fram
 # Decode the frame (SC)
 
 # Create a new vector using the recursive function
-vec_dec_sch = create_decoding_schedule(len_logn)
+vec_dec_schedule, vec_dec_stagesize = create_decoding_schedule(len_logn)
 
-print("Schedule:", vec_dec_sch)
-print("length logn is ", len_logn)
+print("Schedule:", vec_dec_schedule)
+print("Stage Sizes:", vec_dec_stagesize)
+
+print("length log(n) is ", len_logn)
 
 
 
