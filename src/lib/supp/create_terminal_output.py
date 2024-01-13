@@ -16,7 +16,7 @@ def generate_sim_header():
         "#                                                            #",
         "##############################################################",
         "",
-        "SNR (dB)    BER           FER           ITER       Frames    Errors      Time",
+        "SNR (dB)    BER           FER           ITER       Frames     Errors     Time",
     ]
 
     header = "\n".join(header_lines)
@@ -28,7 +28,7 @@ def report_sim_stats(sim_snr_points, sim_bit_error, sim_frame_error, sim_frame_c
     iter = 1
 
     prev_status_msg = status_msg
-    status_msg = f"{sim_snr_points:.3e}   {ber:.5e}   {bler:.5e}   {iter:.2e}   {sim_frame_count:.1e}   {sim_frame_error:.3e}   {time_elapsed}"
+    status_msg = f"{sim_snr_points:.3e}   {ber:.5e}   {bler:.5e}   {iter:.2e}   {sim_frame_count:.2e}   {sim_frame_error:.2e}   {time_elapsed}"
     status_pad = ' ' * max(0, len(prev_status_msg) - len(status_msg))
 
     if(temp == 1):
