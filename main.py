@@ -27,6 +27,9 @@ from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
 from src.lib.supp.create_terminal_output import *
 from src.lib.supp.timekeeper import *
+from scipy.stats import norm
+from scipy.special import erfc
+
 
 '''Sim Initialization'''
 
@@ -40,7 +43,7 @@ vec_polar_rel_idx  = readfile_polar_rel_idx(filepath_polar_rel_idx)
 
 sim_snr_start   = 1
 sim_snr_end     = 4
-sim_snr_step    = 0.5
+sim_snr_step    = 1
 sim_num_frames  = 10000
 sim_num_errors  = 50
 sim_num_max_fr  = 1000000
@@ -94,8 +97,10 @@ prev_status_msg = []
 
 for nsnr in range(0, len_simpoints):
 
-  awgn_mean = 0
-  awgn_var = 1/np.power(10,sim_snr_points[nsnr]/10)
+  snr_linear = 10 ** (sim_snr_points[nsnr] / 10) 
+  snr_ber = 0.5 * erfc(np.sqrt(snr_linear / 2))
+  awgn_var = snr_ber * (1-snr_ber)
+  awgn_var = 1/snr_linear
   awgn_stdev = np.sqrt(awgn_var)
 
   time_start = time.time()
@@ -115,9 +120,9 @@ for nsnr in range(0, len_simpoints):
       vec_mod = 1-2*vec_encoded # Modulate the encoded vector
 
       # Transmit modulated frame through the channel, receive the noisy frame
-      vec_awgn = np.random.normal(loc=awgn_mean, scale=awgn_stdev, size=len_n) # Generate noise
-      vec_rx = vec_mod + vec_awgn                               # Apply noise
-      vec_llr = 2.0 * vec_rx / awgn_var                         # Get LLRs of the frame
+      vec_awgn = np.random.normal(loc=0, scale=awgn_stdev, size=len_n) # Generate noise
+      vec_rx = vec_mod + vec_awgn                                      # Apply noise
+      vec_llr = 2.0 * vec_rx / awgn_var                                # Get LLRs of the frame
       
       # print(f"before quantization: {vec_llr}")
 
