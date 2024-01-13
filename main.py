@@ -25,7 +25,7 @@ import time
 from src.lib.supp.readfile_polar_rel_idx import *
 from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
-from lib.supp.create_terminal_output import *
+from src.lib.supp.create_terminal_output import *
 from src.lib.supp.timekeeper import *
 
 '''Sim Initialization'''
@@ -89,6 +89,8 @@ vec_dec_sch, vec_dec_sch_size, vec_dec_sch_dir = create_decoding_schedule(vec_po
 '''Begin simulation'''
 
 print(generate_sim_header())
+status_msg = []
+prev_status_msg = []
 
 for nsnr in range(0, len_simpoints):
 
@@ -135,15 +137,16 @@ for nsnr in range(0, len_simpoints):
       sim_bit_error[nsnr]   += sum(1 for dec, unc in zip(vec_decoded, vec_uncoded) if dec != unc)
       sim_frame_error[nsnr] = sim_frame_error[nsnr]+1 if sim_bit_error[nsnr] > 0 else sim_frame_error[nsnr]
 
-      # if(sim_frame_count[nsnr] % 999 == 0):
-        #  print(f"{sim_snr_points[nsnr]} status: {sim_frame_count[nsnr]} frames, {sim_frame_error[nsnr]} errors, {sim_bit_error[nsnr]} bit errors")
+      if(sim_frame_count[nsnr] % 10000 == 0):
+        time_end = time.time()
+        time_elapsed = time_end - time_start
+        status_msg = report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, format_time(time_elapsed), 1, status_msg, prev_status_msg)
+        prev_status_msg = status_msg
   
   time_end = time.time()
   time_elapsed = time_end - time_start
-         
-
-  # print(f"{sim_snr_points[nsnr]} status: {sim_frame_count[nsnr]} frames, {sim_frame_error[nsnr]} errors, {sim_bit_error[nsnr]} bit errors in {format_time(time_elapsed)} seconds")
-  report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, time_elapsed)
+  status_msg = report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, format_time(time_elapsed), 0, status_msg, prev_status_msg)
+  prev_status_msg = status_msg
 
 # status_msg = "Hello and welcome to my simulation"
 # print(status_msg, end='\r', flush=True)
