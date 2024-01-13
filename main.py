@@ -21,8 +21,8 @@ import random
 import numpy as np
 import math
 import time
-import matplotlib.pyplot as plt
-# from src.tx.enc.encode import encode
+# import matplotlib.pyplot as plt
+from src.tx.enc.encode import *
 from src.lib.supp.readfile_polar_rel_idx import *
 from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
@@ -67,7 +67,7 @@ sim_frame_error = np.zeros(len_simpoints, dtype=int)
 sim_ber         = np.zeros(len_simpoints, dtype=float)
 sim_bler        = np.zeros(len_simpoints, dtype=float)
 
-batch_size = 500
+batch_size = 1
 
 vec_info    = np.zeros((batch_size,len_k), dtype=int)
 vec_uncoded = np.zeros((batch_size,len_n), dtype=int)
@@ -83,20 +83,26 @@ quant_chnl_lower = (-(2 ** (sim_qbits_chnl -1)))//quant_step
 quant_intl_upper = (2 ** (sim_qbits_intl -1) - 1)/quant_step
 quant_intl_lower = (-(2 ** (sim_qbits_intl -1)))//quant_step
 
-print(f"{quant_step} {quant_chnl_upper} {quant_chnl_lower} {quant_intl_upper} {quant_intl_lower}")
-
 '''One-time preparation for the simulation'''
 
-# Generate the polar frozen indicators
-vec_polar_frozen = [1] * len_n
+# Generate the polar frozen/info indicators
+vec_polar_frozen = np.ones(len_n, dtype=int)
+vec_polar_info = np.ones(len_n, dtype=int)
+
 for num, index in enumerate(vec_polar_rel_idx[:len_k], start=0):
     vec_polar_frozen[index] = 0
+for num, index in enumerate(vec_polar_rel_idx[len_k:], start=len_k):
+    vec_polar_info[index] = 0 
+
+vec_polar_info_indices = np.nonzero(vec_polar_info)[0]
 
 # Generate the polar encoding matrix based on master code length
 polar_enc_matrix_core = [[1, 0], [1, 1]]
 polar_enc_matrix = polar_enc_matrix_core  # Core matrix as the initial value
 for _ in range(len_logn-1):
     polar_enc_matrix = np.kron(polar_enc_matrix, polar_enc_matrix_core)
+
+polar_enc_matrix = polar_enc_matrix[vec_polar_info_indices]
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
 vec_dec_sch, vec_dec_sch_size, vec_dec_sch_dir = create_decoding_schedule(vec_polar_frozen, len_logn)
@@ -108,8 +114,6 @@ print(generate_sim_header())
 status_msg = []
 prev_status_msg = []
 
-
-
 for nsnr in range(0, len_simpoints):
 
   snr_linear = 10 ** (sim_snr_points[nsnr] / 10) 
@@ -120,15 +124,15 @@ for nsnr in range(0, len_simpoints):
 
   while(sim_frame_count[nsnr] < sim_num_frames or sim_frame_error[nsnr] < sim_num_errors):# and sim_frame_count > sim_num_max_fr):
       
-      
-
       vec_info = np.random.choice([0, 1], size=(batch_size, len_k))
-      vec_uncoded = np.zeros((batch_size, len_n), dtype=int)
+      # vec_uncoded = np.zeros((batch_size, len_n), dtype=int)
 
-      for i in range(len_k):
-        vec_uncoded[:, vec_polar_rel_idx[i]] = vec_info[:, i]
+      # for i in range(len_k):
+      #   vec_uncoded[:, vec_polar_rel_idx[i]] = vec_info[:, i]
 
-      vec_encoded = (vec_uncoded @ polar_enc_matrix  % 2) # Encode the uncoded vector
+      vec_encode = polar_encode(vec_info, polar_enc_matrix)
+      # vec_encode = polar_encode_fast(vec_uncoded)
+      # vec_encoded = (vec_uncoded @ polar_enc_matrix  % 2) # Encode the uncoded vector
       vec_mod = 1-2*vec_encoded # Modulate the encoded vector
 
       # Transmit modulated frame through the channel, receive the noisy frame
@@ -186,7 +190,7 @@ for nsnr in range(0, len_simpoints):
 TODO:
 --> Insert input file
 --> Insert the decoder
---> Speed up decoding
+--> Speed up decoding (IN PROGRESS)
 --> Insert readme file
 --> Create option to log sim outputs to a file
 --> Work on GUI
