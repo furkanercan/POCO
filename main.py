@@ -25,6 +25,8 @@ import time
 from src.lib.supp.readfile_polar_rel_idx import *
 from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
+from lib.supp.create_terminal_output import *
+from src.lib.supp.timekeeper import *
 
 '''Sim Initialization'''
 
@@ -39,20 +41,21 @@ vec_polar_rel_idx  = readfile_polar_rel_idx(filepath_polar_rel_idx)
 sim_snr_start   = 1
 sim_snr_end     = 4
 sim_snr_step    = 0.5
-sim_num_frames  = 1
-sim_num_errors  = 1
+sim_num_frames  = 10000
+sim_num_errors  = 50
 sim_num_max_fr  = 1000000
 sim_enable_quant = 1
 
-sim_frame_count = 0
-sim_frame_error = 0
-sim_bit_error   = 0
 len_k           = 32
 len_n           = len(vec_polar_rel_idx)
 len_logn        = int(math.log2(len_n))
 
 sim_snr_points = np.arange(sim_snr_start, sim_snr_end + sim_snr_step, sim_snr_step, dtype=float)
 len_simpoints = len(sim_snr_points)
+
+sim_frame_count = [0] * len_simpoints
+sim_frame_error = [0] * len_simpoints
+sim_bit_error   = [0] * len_simpoints
 
 print(f"len_simpoints {len_simpoints}")
 
@@ -85,18 +88,17 @@ vec_dec_sch, vec_dec_sch_size, vec_dec_sch_dir = create_decoding_schedule(vec_po
 
 '''Begin simulation'''
 
+print(generate_sim_header())
 
-for nsnr in range(1, len_simpoints):
-
-  sim_frame_count = 0
-  sim_frame_error = 0
-  sim_bit_error   = 0
+for nsnr in range(0, len_simpoints):
 
   awgn_mean = 0
   awgn_var = 1/np.power(10,sim_snr_points[nsnr]/10)
   awgn_stdev = np.sqrt(awgn_var)
 
-  while(sim_frame_count < sim_num_frames or sim_frame_error < sim_num_errors):# and sim_frame_count > sim_num_max_fr):
+  time_start = time.time()
+
+  while(sim_frame_count[nsnr] < sim_num_frames or sim_frame_error[nsnr] < sim_num_errors):# and sim_frame_count > sim_num_max_fr):
       # Generate information bits, get vec_k
       vec_info = [random.choice([0,1]) for _ in range(len_k)]
 
@@ -129,12 +131,19 @@ for nsnr in range(1, len_simpoints):
       # print(f"NUMBER OF BIT ERRORS IS {sim_bit_error}")
 
       #Update frame and error counts
-      sim_frame_count += 1
-      sim_bit_error   += sum(1 for dec, unc in zip(vec_decoded, vec_uncoded) if dec != unc)
-      sim_frame_error = sim_frame_error+1 if sim_bit_error > 0 else sim_frame_error
+      sim_frame_count[nsnr] += 1
+      sim_bit_error[nsnr]   += sum(1 for dec, unc in zip(vec_decoded, vec_uncoded) if dec != unc)
+      sim_frame_error[nsnr] = sim_frame_error[nsnr]+1 if sim_bit_error[nsnr] > 0 else sim_frame_error[nsnr]
 
-      if(sim_frame_count == 10000):
-        print(f"Status: {sim_frame_count} frames, {sim_frame_error} errors, {sim_bit_error} bit errors")
+      # if(sim_frame_count[nsnr] % 999 == 0):
+        #  print(f"{sim_snr_points[nsnr]} status: {sim_frame_count[nsnr]} frames, {sim_frame_error[nsnr]} errors, {sim_bit_error[nsnr]} bit errors")
+  
+  time_end = time.time()
+  time_elapsed = time_end - time_start
+         
+
+  # print(f"{sim_snr_points[nsnr]} status: {sim_frame_count[nsnr]} frames, {sim_frame_error[nsnr]} errors, {sim_bit_error[nsnr]} bit errors in {format_time(time_elapsed)} seconds")
+  report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, time_elapsed)
 
 # status_msg = "Hello and welcome to my simulation"
 # print(status_msg, end='\r', flush=True)
