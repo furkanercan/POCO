@@ -36,7 +36,7 @@ from src.lib.supp.timekeeper import *
 '''Sim initialization'''
 
 # Set random seeds
-np.random.seed(1564) 
+np.random.seed(1564)
 
 # Read external configuration parameters
 with open('config.json', 'r') as f:
@@ -48,7 +48,7 @@ sim.snr_points  = np.arange(sim.snr_start, sim.snr_end + sim.snr_step, sim.snr_s
 # Read the polar reliability index file
 vec_polar_rel_idx  = readfile_polar_rel_idx(sim.filepath_polar_rel_idx)
 
-batch_size      = 100
+batch_size      = 1
 len_k           = sim.len_k
 len_n           = len(vec_polar_rel_idx)
 len_logn        = int(math.log2(len_n))
@@ -83,8 +83,6 @@ polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
 vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
-
-print(f"vec_dec_sch: {vec_dec_sch}")
 
 # Decoder-related vectors
 mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
@@ -140,15 +138,15 @@ for nsnr in range(0, len_simpoints):
 
       # print(f"{sim_frame_count}   {sim_bit_error}   {sim_frame_error}")
 
-      if(sim.frame_count[nsnr] % 1000 == 0):
+      if(sim.frame_count[nsnr] % 100 == 0):
         time_end = time.time()
         time_elapsed = time_end - time_start
-        status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_n, format_time(time_elapsed), 1, status_msg, prev_status_msg)
+        status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_k, format_time(time_elapsed), 1, status_msg, prev_status_msg)
         prev_status_msg = status_msg
   
   time_end = time.time()
   time_elapsed = time_end - time_start
-  status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_n, format_time(time_elapsed), 0, status_msg, prev_status_msg)
+  status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_k, format_time(time_elapsed), 0, status_msg, prev_status_msg)
   prev_status_msg = status_msg
 
 # Calculate BER/BLER and present in a semilogy plot
@@ -166,7 +164,7 @@ plt.show()
 
 '''
 TODO:
---> Insert the decoder
+--> Insert the decoder (IN PROGRESS)
 --> Speed up decoding (IN PROGRESS)
 --> Insert readme file
 --> Structure input file

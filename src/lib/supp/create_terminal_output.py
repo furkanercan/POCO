@@ -22,8 +22,8 @@ def generate_sim_header():
     header = "\n".join(header_lines)
     return header
 
-def report_sim_stats(sim_snr_points, sim_bit_error, sim_frame_error, sim_frame_count, len_n, time_elapsed, temp, status_msg, prev_status_msg):
-    ber = sim_bit_error/(sim_frame_count*len_n)
+def report_sim_stats(sim_snr_points, sim_bit_error, sim_frame_error, sim_frame_count, len_k, time_elapsed, temp, status_msg, prev_status_msg):
+    ber = sim_bit_error/(sim_frame_count*len_k)
     bler = sim_frame_error/sim_frame_count
     iter = 1
 
