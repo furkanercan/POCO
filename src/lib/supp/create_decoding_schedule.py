@@ -11,23 +11,29 @@ def call_decoding_schedule(target_sch, base_vector, limit):
 
 def create_decoding_stages(vec_sch, sch_limit):
     vec_stage = []
+    vec_depth = []
     current_stagesize = np.power(2,sch_limit)
     for i in range(len(vec_sch)):
         if(vec_sch[i] == 'F'):
             vec_stage.append(int(current_stagesize))
+            vec_depth.append(int(np.log2(current_stagesize)))
             current_stagesize /= 2
         elif(vec_sch[i] == 'G'):
             if(vec_sch[i-1] == 'C' or vec_sch[i-1] == 'H'):
                 vec_stage.append(int(current_stagesize*2))
+                vec_depth.append(int(np.log2(current_stagesize*2)))
             else:
                 vec_stage.append(int(current_stagesize))
+                vec_depth.append(int(np.log2(current_stagesize)))
                 current_stagesize *= 2
         elif(vec_sch[i] == 'C'):
             vec_stage.append(int(current_stagesize))
+            vec_depth.append(int(np.log2(current_stagesize)))
             current_stagesize *= 2
         else:
             vec_stage.append(int(current_stagesize))
-    return vec_stage
+            vec_depth.append(int(np.log2(current_stagesize)))
+    return vec_stage, vec_depth
 
 
 
@@ -63,7 +69,7 @@ def create_decoding_schedule(vec_frozen, sch_limit):
     vec_dec_sch = []
 
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
-    vec_dec_sch_size = create_decoding_stages(vec_dec_sch, sch_limit)
+    vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch, sch_limit)
     vec_dec_sch_dir = create_decoding_direction(vec_dec_sch, vec_dec_sch_size, sch_limit)
     vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
     
@@ -72,4 +78,4 @@ def create_decoding_schedule(vec_frozen, sch_limit):
     # print("Decoding direction for B memory:", vec_sch_dir)
     # print("Decoding schedule with info indices:", vec_sch)
     
-    return vec_dec_sch, vec_dec_sch_size, vec_dec_sch_dir
+    return vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir
