@@ -1,0 +1,15 @@
+{
+    "snr_start": 1,
+    "snr_end": 4,
+    "snr_step" : 1,
+    
+    "num_frames" : 10000,
+    "num_errors" : 50,
+    "num_max_fr" : 1000000,
+
+    "qbits_enable" : 1,
+    "qbits_chnl"   : 5,
+    "qbits_intl"   : 6,
+    "qbits_frac"   : 1
+    
+}

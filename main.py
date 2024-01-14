@@ -21,6 +21,7 @@ import random
 import numpy as np
 import math
 import time
+import json
 # import matplotlib.pyplot as plt
 from src.tx.enc.encode import *
 from src.lib.supp.readfile_polar_rel_idx import *
@@ -42,17 +43,22 @@ random.seed(918)
 filepath_polar_rel_idx = "src/lib/ecc/polar/3gpp/n1024_3gpp.pc"
 vec_polar_rel_idx  = readfile_polar_rel_idx(filepath_polar_rel_idx)
 
-sim_snr_start   = 4
-sim_snr_end     = 4
-sim_snr_step    = 1
-sim_num_frames  = 3000
-sim_num_errors  = 50
-sim_num_max_fr  = 1000000
+# Read external configuration parameters
+with open('config.json', 'r') as f:
+    sim_config_params = json.load(f)
 
-sim_qbits_enable = 1
-sim_qbits_chnl = 5
-sim_qbits_intl = 6
-sim_qbits_frac = 1
+sim_snr_start = sim_config_params["snr_start"]
+sim_snr_end = sim_config_params["snr_end"]
+sim_snr_step    = sim_config_params["snr_step"]
+
+sim_num_frames  = sim_config_params["num_frames"]
+sim_num_errors  = sim_config_params["num_errors"]
+sim_num_max_fr  = sim_config_params["num_max_fr"]
+
+sim_qbits_enable = sim_config_params["qbits_enable"]
+sim_qbits_chnl = sim_config_params["qbits_chnl"]
+sim_qbits_intl = sim_config_params["qbits_intl"]
+sim_qbits_frac = sim_config_params["qbits_frac"]
 
 len_k           = 512
 len_n           = len(vec_polar_rel_idx)
@@ -67,7 +73,7 @@ sim_frame_error = np.zeros(len_simpoints, dtype=int)
 sim_ber         = np.zeros(len_simpoints, dtype=float)
 sim_bler        = np.zeros(len_simpoints, dtype=float)
 
-batch_size = 1
+batch_size = 100
 
 vec_info    = np.zeros((batch_size,len_k), dtype=int)
 vec_uncoded = np.zeros((batch_size,len_n), dtype=int)
@@ -192,6 +198,8 @@ TODO:
 --> Insert the decoder
 --> Speed up decoding (IN PROGRESS)
 --> Insert readme file
+--> Structure input file
+--> Create stucts for parameters for portability
 --> Create option to log sim outputs to a file
 --> Work on GUI
 --> Multi-threading option
