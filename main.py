@@ -17,13 +17,14 @@ License:
   See the LICENSE file for details.
 """
 
-import random
 import numpy as np
 import math
 import time
 import json
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from src.tx.enc.encode import *
+from src.rx.dec.sc import *
+from src.lib.supp.modules import *
 from src.lib.supp.readfile_polar_rel_idx import *
 from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
@@ -32,87 +33,64 @@ from src.lib.supp.timekeeper import *
 # from scipy.stats import norm
 # from scipy.special import erfc
 
-
-'''Sim Initialization'''
+'''Sim initialization'''
 
 # Set random seeds
-np.random.seed(919) 
-random.seed(918)
-
-# Read the polar reliability index file
-filepath_polar_rel_idx = "src/lib/ecc/polar/3gpp/n1024_3gpp.pc"
-vec_polar_rel_idx  = readfile_polar_rel_idx(filepath_polar_rel_idx)
+np.random.seed(1564) 
 
 # Read external configuration parameters
 with open('config.json', 'r') as f:
-    sim_config_params = json.load(f)
+    config_params = json.load(f)
 
-sim_snr_start = sim_config_params["snr_start"]
-sim_snr_end = sim_config_params["snr_end"]
-sim_snr_step    = sim_config_params["snr_step"]
+sim = create_sim_from_config(config_params)
+sim.snr_points  = np.arange(sim.snr_start, sim.snr_end + sim.snr_step, sim.snr_step, dtype=float)
 
-sim_num_frames  = sim_config_params["num_frames"]
-sim_num_errors  = sim_config_params["num_errors"]
-sim_num_max_fr  = sim_config_params["num_max_fr"]
+# Read the polar reliability index file
+vec_polar_rel_idx  = readfile_polar_rel_idx(sim.filepath_polar_rel_idx)
 
-sim_qbits_enable = sim_config_params["qbits_enable"]
-sim_qbits_chnl = sim_config_params["qbits_chnl"]
-sim_qbits_intl = sim_config_params["qbits_intl"]
-sim_qbits_frac = sim_config_params["qbits_frac"]
-
-len_k           = 512
+batch_size      = 100
+len_k           = sim.len_k
 len_n           = len(vec_polar_rel_idx)
 len_logn        = int(math.log2(len_n))
+len_simpoints   = len(sim.snr_points)
 
-sim_snr_points = np.arange(sim_snr_start, sim_snr_end + sim_snr_step, sim_snr_step, dtype=float)
-len_simpoints = len(sim_snr_points)
-
-sim_frame_count = np.zeros(len_simpoints, dtype=int)
-sim_bit_error   = np.zeros(len_simpoints, dtype=int)
-sim_frame_error = np.zeros(len_simpoints, dtype=int)
-sim_ber         = np.zeros(len_simpoints, dtype=float)
-sim_bler        = np.zeros(len_simpoints, dtype=float)
-
-batch_size = 100
+sim.frame_count = np.zeros(len_simpoints, dtype=int)
+sim.bit_error   = np.zeros(len_simpoints, dtype=int)
+sim.frame_error = np.zeros(len_simpoints, dtype=int)
+sim.ber         = np.zeros(len_simpoints, dtype=float)
+sim.bler        = np.zeros(len_simpoints, dtype=float)
 
 vec_info    = np.zeros((batch_size,len_k), dtype=int)
-vec_uncoded = np.zeros((batch_size,len_n), dtype=int)
 vec_encoded = np.zeros((batch_size,len_n), dtype=int)
 vec_mod     = np.zeros((batch_size,len_n), dtype=int)
 vec_awgn    = np.zeros((batch_size,len_n), dtype=float)
-vec_rx      = np.zeros((batch_size,len_n), dtype=float)
 vec_llr     = np.zeros((batch_size,len_n), dtype=float)
+vec_decoded = np.zeros((batch_size,len_k), dtype=int)
 
-quant_step       = 2 ** sim_qbits_frac
-quant_chnl_upper = (2 ** (sim_qbits_chnl -1) - 1)/quant_step
-quant_chnl_lower = (-(2 ** (sim_qbits_chnl -1)))//quant_step
-quant_intl_upper = (2 ** (sim_qbits_intl -1) - 1)/quant_step
-quant_intl_lower = (-(2 ** (sim_qbits_intl -1)))//quant_step
+quant_step       = 2 ** sim.qbits_frac
+quant_chnl_upper = (2 ** (sim.qbits_chnl -1) - 1)/quant_step
+quant_chnl_lower = (-(2 ** (sim.qbits_chnl -1)))//quant_step
+quant_intl_upper = (2 ** (sim.qbits_intl -1) - 1)/quant_step
+quant_intl_lower = (-(2 ** (sim.qbits_intl -1)))//quant_step
 
 '''One-time preparation for the simulation'''
 
 # Generate the polar frozen/info indicators
-vec_polar_frozen = np.ones(len_n, dtype=int)
-vec_polar_info = np.ones(len_n, dtype=int)
-
-for num, index in enumerate(vec_polar_rel_idx[:len_k], start=0):
-    vec_polar_frozen[index] = 0
-for num, index in enumerate(vec_polar_rel_idx[len_k:], start=len_k):
-    vec_polar_info[index] = 0 
-
-vec_polar_info_indices = np.nonzero(vec_polar_info)[0]
+vec_polar_info_indices, vec_polar_isfrozen = create_polar_indices(len_n, len_k, vec_polar_rel_idx)
 
 # Generate the polar encoding matrix based on master code length
-polar_enc_matrix_core = [[1, 0], [1, 1]]
-polar_enc_matrix = polar_enc_matrix_core  # Core matrix as the initial value
-for _ in range(len_logn-1):
-    polar_enc_matrix = np.kron(polar_enc_matrix, polar_enc_matrix_core)
-
-polar_enc_matrix = polar_enc_matrix[vec_polar_info_indices]
+polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
-vec_dec_sch, vec_dec_sch_size, vec_dec_sch_dir = create_decoding_schedule(vec_polar_frozen, len_logn)
+vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
 
+print(f"vec_dec_sch: {vec_dec_sch}")
+
+# Decoder-related vectors
+mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
+mem_beta      = np.zeros((batch_size, len_logn + 1, len_n), dtype=int)
+mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
+mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
 
 '''Begin simulation'''
 
@@ -122,85 +100,79 @@ prev_status_msg = []
 
 for nsnr in range(0, len_simpoints):
 
-  snr_linear = 10 ** (sim_snr_points[nsnr] / 10) 
+  time_start = time.time()
+  snr_linear = 10 ** (sim.snr_points[nsnr] / 10) 
   awgn_var = 1/snr_linear
   awgn_stdev = np.sqrt(awgn_var)
 
-  time_start = time.time()
-
-  while(sim_frame_count[nsnr] < sim_num_frames or sim_frame_error[nsnr] < sim_num_errors):# and sim_frame_count > sim_num_max_fr):
+  while(sim.frame_count[nsnr] < sim.num_frames or sim.frame_error[nsnr] < sim.num_errors):# and sim_frame_count > sim_num_max_fr):
       
-      vec_info = np.random.choice([0, 1], size=(batch_size, len_k))
-      # vec_uncoded = np.zeros((batch_size, len_n), dtype=int)
-
-      # for i in range(len_k):
-      #   vec_uncoded[:, vec_polar_rel_idx[i]] = vec_info[:, i]
-
-      vec_encode = polar_encode(vec_info, polar_enc_matrix)
-      # vec_encode = polar_encode_fast(vec_uncoded)
-      # vec_encoded = (vec_uncoded @ polar_enc_matrix  % 2) # Encode the uncoded vector
-      vec_mod = 1-2*vec_encoded # Modulate the encoded vector
-
-      # Transmit modulated frame through the channel, receive the noisy frame
+      vec_info = np.random.choice([0, 1], size=(batch_size, len_k))                  # Generate information
+      vec_encode = polar_encode(vec_info, polar_enc_matrix)                          # Encode information
+      vec_mod = 1-2*vec_encoded                                                      # Apply BPSK modulation
       vec_awgn = np.random.normal(loc=0, scale=awgn_stdev, size=(batch_size, len_n)) # Generate noise
-      vec_rx = vec_mod + vec_awgn                                      # Apply noise
-      vec_llr = 2.0 * vec_rx / awgn_var                                # Get LLRs of the frame
+      vec_llr = 2 * (vec_mod + vec_awgn) / awgn_var                                  # Apply noise, obtain LLRs
       
       # print(f"before quantization: {vec_llr}")
-      if(sim_qbits_enable):
+      if(sim.qbits_enable):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
       
       # print(f"after quantization: {vec_llr}")
 
+      mem_alpha[:,len_logn,:] = vec_llr
+      mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
+      mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
+      dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
+
       # HARD DECISION AND COMPARE FOR THE TIME BEING (UNCODED SCENARIO)
-      vec_decoded = np.where(vec_llr < 0, 1, 0)
+      # vec_decoded = np.where(vec_llr < 0, 1, 0)
 
       # print(f"NUMBER OF BIT ERRORS IS {sim_bit_error}")
 
       #Update frame and error counts
-      sim_frame_count[nsnr] += batch_size
-      sim_bit_error[nsnr] += np.sum(vec_decoded != vec_encoded)
-      sim_frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_encoded, axis=1))
+      sim.frame_count[nsnr] += batch_size
+      sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
+      sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
 
       # sim_frame_error[nsnr] += int(np.any(sim_bit_error[nsnr] > 0))
 
+      # print(f"sim.frame_count[nsnr]: {sim.frame_count[nsnr]}")
 
       # print(f"{sim_frame_count}   {sim_bit_error}   {sim_frame_error}")
 
-      if(sim_frame_count[nsnr] % 1000 == 0):
+      if(sim.frame_count[nsnr] % 1000 == 0):
         time_end = time.time()
         time_elapsed = time_end - time_start
-        status_msg = report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, format_time(time_elapsed), 1, status_msg, prev_status_msg)
+        status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_n, format_time(time_elapsed), 1, status_msg, prev_status_msg)
         prev_status_msg = status_msg
   
   time_end = time.time()
   time_elapsed = time_end - time_start
-  status_msg = report_sim_stats(sim_snr_points[nsnr], sim_bit_error[nsnr], sim_frame_error[nsnr], sim_frame_count[nsnr], len_n, format_time(time_elapsed), 0, status_msg, prev_status_msg)
+  status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_n, format_time(time_elapsed), 0, status_msg, prev_status_msg)
   prev_status_msg = status_msg
 
-# Create a semilogy plot
-# for i in range (0,len_simpoints):
-#   sim_ber[i]  = sim_bit_error[i]/(sim_frame_count[i]*len_n)
-#   sim_bler[i] = sim_frame_error[i]/sim_frame_count[i]
-# plt.semilogy(sim_snr_points, sim_ber, 'b--', label='Bit Error')
-# plt.semilogy(sim_snr_points, sim_bler, 'b-', label='Frame Error')
-# plt.xlabel('SNR Points')
-# plt.ylabel('Error Rate')
-# plt.title('Bit Error and Frame Error vs SNR')
-# plt.legend()
-# plt.show()
+# Calculate BER/BLER and present in a semilogy plot
+sim.ber = np.divide(sim.bit_error, sim.frame_count * len_k)
+sim.bler = np.divide(sim.frame_error, sim.frame_count)
+plt.semilogy(sim.snr_points, sim.ber, 'b--', label='BER')
+plt.semilogy(sim.snr_points, sim.bler, 'b-', label='BLER')
+plt.xlabel('SNR (dB)')
+plt.ylabel('BER/BLER')
+plt.title('Error Correction Performance')
+plt.legend()
+plt.show()
 
 '''End simulation'''
 
 '''
 TODO:
---> Insert input file
 --> Insert the decoder
 --> Speed up decoding (IN PROGRESS)
 --> Insert readme file
 --> Structure input file
---> Create stucts for parameters for portability
+--> Create more stucts for parameters for portability
 --> Create option to log sim outputs to a file
 --> Work on GUI
 --> Multi-threading option
+--> Add information content on GUI, videos pictures, etc.
 '''
