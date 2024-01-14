@@ -1,6 +1,9 @@
 {
-    "snr_start": 1,
-    "snr_end": 4,
+    "filepath_polar_rel_idx" : "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
+    "info_bit_length" : 512,
+
+    "snr_start" : 1,
+    "snr_end" : 4,
     "snr_step" : 1,
     
     "num_frames" : 10000,
