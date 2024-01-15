@@ -30,17 +30,13 @@ from src.lib.supp.create_decoding_schedule import *
 from src.lib.supp.llr_quantizer import *
 from src.lib.supp.create_terminal_output import *
 from src.lib.supp.timekeeper import *
-# from scipy.stats import norm
-# from scipy.special import erfc
 
 '''Sim initialization'''
 
-# Set random seeds
-np.random.seed(1564)
+np.random.seed(1564) # Set random seeds
 
-# Read external configuration parameters
 with open('config.json', 'r') as f:
-    config_params = json.load(f)
+    config_params = json.load(f) # Read external configuration parameters
 
 sim = create_sim_from_config(config_params)
 sim.snr_points  = np.arange(sim.snr_start, sim.snr_end + sim.snr_step, sim.snr_step, dtype=float)
@@ -111,11 +107,8 @@ for nsnr in range(0, len_simpoints):
       vec_awgn = np.random.normal(loc=0, scale=awgn_stdev, size=(batch_size, len_n)) # Generate noise
       vec_llr = 2 * (vec_mod + vec_awgn) / awgn_var                                  # Apply noise, obtain LLRs
       
-      # print(f"before quantization: {vec_llr}")
       if(sim.qbits_enable):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
-      
-      # print(f"after quantization: {vec_llr}")
 
       mem_alpha[:,len_logn,:] = vec_llr
       mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
@@ -126,12 +119,6 @@ for nsnr in range(0, len_simpoints):
       sim.frame_count[nsnr] += batch_size
       sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
       sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
-
-      # sim_frame_error[nsnr] += int(np.any(sim_bit_error[nsnr] > 0))
-
-      # print(f"sim.frame_count[nsnr]: {sim.frame_count[nsnr]}")
-
-      # print(f"{sim_frame_count}   {sim_bit_error}   {sim_frame_error}")
 
       if(sim.frame_count[nsnr] % 100 == 0):
         time_end = time.time()
@@ -160,8 +147,7 @@ if(sim.plot_enable):
 
 '''
 TODO:
---> Insert the decoder (IN PROGRESS)
---> Speed up decoding (IN PROGRESS)
+--> Insert fast nodes
 --> Insert readme file
 --> Structure input file
 --> Create more stucts for parameters for portability

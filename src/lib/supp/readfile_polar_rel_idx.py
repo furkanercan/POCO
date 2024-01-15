@@ -7,8 +7,6 @@ def readfile_polar_rel_idx(filepath):
             for line in file:
                 values = line.split()
                 vec_polar_rel_idx.extend([int(x) for x in values])
-                # content = file.read()
-                # vec_polar_rel_idx = [int(x) for x in content.split()]
     except FileNotFoundError:
         print(f"Error: File '{filepath}' not found.")
     except Exception as e:

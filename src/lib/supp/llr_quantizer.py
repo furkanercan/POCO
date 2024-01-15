@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 def llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper):
     
