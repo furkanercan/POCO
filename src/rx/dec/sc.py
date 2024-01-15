@@ -1,40 +1,43 @@
+import numpy as np
+
 def dec_sc_f(mem_alpha, stage_size, stage_depth, mem_alpha_ptr, is_quantized, max_value, min_value):
     batch_size = mem_alpha.shape[0]
     
     for b in range(batch_size):
-        for i in range(stage_size // 2):
-            llr_a = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i]
-            llr_b = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i + stage_size // 2]
-            mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(abs(llr_a), abs(llr_b)) * (1 if llr_a * llr_b >= 0 else -1)
-            
-            if is_quantized:
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(max_value, mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i])
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = max(min_value, mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i])
+        llr_a = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth]:(mem_alpha_ptr[stage_depth] + stage_size // 2)]
+        llr_b = mem_alpha[b, stage_depth, (mem_alpha_ptr[stage_depth] + stage_size // 2):(mem_alpha_ptr[stage_depth] + stage_size)]
+        
+        abs_llr = np.minimum(np.abs(llr_a), np.abs(llr_b))
+        sign = np.sign(llr_a * llr_b)
+        result = abs_llr * sign
 
+        if is_quantized: #Only possible breach is when the result is 2^q and in 2s complement form.
+            result = np.minimum(max_value, result)
+        
+        mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1]:(mem_alpha_ptr[stage_depth - 1] + stage_size // 2)] = result
 
 def dec_sc_g(mem_alpha, mem_beta, stage_size, stage_depth, mem_alpha_ptr, is_quantized, max_value, min_value):
     batch_size = mem_alpha.shape[0]
 
     for b in range(batch_size):
-        for i in range(stage_size // 2):
-            llr_a = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i]
-            llr_b = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i + stage_size // 2]
+        llr_a = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth]:(mem_alpha_ptr[stage_depth] + stage_size // 2)]
+        llr_b = mem_alpha[b, stage_depth, (mem_alpha_ptr[stage_depth] + stage_size // 2):(mem_alpha_ptr[stage_depth] + stage_size)]
 
-            if mem_beta[b, stage_depth - 1, mem_alpha_ptr[stage_depth] + i] == 0:
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = llr_b + llr_a
-            else:
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = llr_b - llr_a
+        mem_beta_slice = mem_beta[b, stage_depth - 1, mem_alpha_ptr[stage_depth]:(mem_alpha_ptr[stage_depth] + stage_size // 2)]
+        mem_alpha_slice = np.where(mem_beta_slice == 0, llr_b + llr_a, llr_b - llr_a)        
 
-            if is_quantized:
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(max_value, mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i])
-                mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = max(min_value, mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i])
+        if is_quantized:
+            mem_alpha_slice = np.clip(mem_alpha_slice, min_value, max_value)
+
+        mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1]:(mem_alpha_ptr[stage_depth - 1] + stage_size // 2)] = mem_alpha_slice
 
 def dec_sc_c(mem_beta, stage_size, stage_depth, mem_beta_ptr):
-    batch_size = mem_beta.shape[0]
-    for b in range(batch_size):
-        for i in range(stage_size):
-            mem_beta[b, stage_depth + 1, mem_beta_ptr[stage_depth + 1] + i]              = mem_beta[b, stage_depth, i + mem_beta_ptr[stage_depth + 1]] ^ mem_beta[b, stage_depth, i + stage_size + mem_beta_ptr[stage_depth + 1]]
-            mem_beta[b, stage_depth + 1, mem_beta_ptr[stage_depth + 1] + i + stage_size] =                                                               mem_beta[b, stage_depth, i + stage_size + mem_beta_ptr[stage_depth + 1]]
+
+    beta_src1 = mem_beta[:, stage_depth, mem_beta_ptr[stage_depth + 1] : mem_beta_ptr[stage_depth + 1] + stage_size]
+    beta_src2 = mem_beta[:, stage_depth, mem_beta_ptr[stage_depth + 1] + stage_size : mem_beta_ptr[stage_depth + 1] + 2*stage_size]
+
+    mem_beta[:, stage_depth + 1, mem_beta_ptr[stage_depth + 1] : mem_beta_ptr[stage_depth + 1] + stage_size] = np.bitwise_xor(beta_src1, beta_src2)
+    mem_beta[:, stage_depth + 1, mem_beta_ptr[stage_depth + 1] + stage_size : mem_beta_ptr[stage_depth + 1] + 2*stage_size] = beta_src2
 
 def dec_sc_h(mem_beta, llr, is_frozen, mem_alpha_ptr):
     batch_size = mem_beta.shape[0]
