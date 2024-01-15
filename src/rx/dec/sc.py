@@ -5,7 +5,7 @@ def dec_sc_f(mem_alpha, stage_size, stage_depth, mem_alpha_ptr, is_quantized, ma
         for i in range(stage_size // 2):
             llr_a = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i]
             llr_b = mem_alpha[b, stage_depth, mem_alpha_ptr[stage_depth] + i + stage_size // 2]
-            mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(llr_a, llr_b) * (1 if llr_a * llr_b >= 0 else -1)
+            mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(abs(llr_a), abs(llr_b)) * (1 if llr_a * llr_b >= 0 else -1)
             
             if is_quantized:
                 mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i] = min(max_value, mem_alpha[b, stage_depth - 1, mem_alpha_ptr[stage_depth - 1] + i])

@@ -1,5 +1,5 @@
 class Sim:
-    def __init__(self, filepath_polar_rel_idx, len_k, snr_start, snr_end, snr_step, num_frames, num_errors, num_max_fr, qbits_enable, qbits_chnl, qbits_intl, qbits_frac):
+    def __init__(self, filepath_polar_rel_idx, len_k, snr_start, snr_end, snr_step, num_frames, num_errors, num_max_fr, qbits_enable, qbits_chnl, qbits_intl, qbits_frac, plot_enable):
         self.filepath_polar_rel_idx = filepath_polar_rel_idx
         self.len_k = len_k
         self.snr_start = snr_start
@@ -12,6 +12,7 @@ class Sim:
         self.qbits_chnl = qbits_chnl
         self.qbits_intl = qbits_intl
         self.qbits_frac = qbits_frac
+        self.plot_enable = plot_enable
 
 
 def create_sim_from_config(config_data):
@@ -27,5 +28,6 @@ def create_sim_from_config(config_data):
         qbits_enable = config_data.get("qbits_enable"),
         qbits_chnl = config_data.get("qbits_chnl"),
         qbits_intl = config_data.get("qbits_intl"),
-        qbits_frac = config_data.get("qbits_frac")
+        qbits_frac = config_data.get("qbits_frac"),
+        plot_enable = config_data.get("plot_enable")
     )

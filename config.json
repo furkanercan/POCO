@@ -4,7 +4,7 @@
 
     "snr_start" : 1,
     "snr_end" : 4,
-    "snr_step" : 1,
+    "snr_step" : 0.25,
     
     "num_frames" : 10000,
     "num_errors" : 50,
@@ -13,6 +13,8 @@
     "qbits_enable" : 1,
     "qbits_chnl"   : 5,
     "qbits_intl"   : 6,
-    "qbits_frac"   : 1
+    "qbits_frac"   : 1,
+
+    "plot_enable"  : 1
     
 }

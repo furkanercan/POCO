@@ -106,7 +106,7 @@ for nsnr in range(0, len_simpoints):
   while(sim.frame_count[nsnr] < sim.num_frames or sim.frame_error[nsnr] < sim.num_errors):# and sim_frame_count > sim_num_max_fr):
       
       vec_info = np.random.choice([0, 1], size=(batch_size, len_k))                  # Generate information
-      vec_encode = polar_encode(vec_info, polar_enc_matrix)                          # Encode information
+      vec_encoded = polar_encode(vec_info, polar_enc_matrix)                          # Encode information
       vec_mod = 1-2*vec_encoded                                                      # Apply BPSK modulation
       vec_awgn = np.random.normal(loc=0, scale=awgn_stdev, size=(batch_size, len_n)) # Generate noise
       vec_llr = 2 * (vec_mod + vec_awgn) / awgn_var                                  # Apply noise, obtain LLRs
@@ -121,11 +121,6 @@ for nsnr in range(0, len_simpoints):
       mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
       mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
       dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
-
-      # HARD DECISION AND COMPARE FOR THE TIME BEING (UNCODED SCENARIO)
-      # vec_decoded = np.where(vec_llr < 0, 1, 0)
-
-      # print(f"NUMBER OF BIT ERRORS IS {sim_bit_error}")
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size
@@ -149,16 +144,17 @@ for nsnr in range(0, len_simpoints):
   status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_k, format_time(time_elapsed), 0, status_msg, prev_status_msg)
   prev_status_msg = status_msg
 
-# Calculate BER/BLER and present in a semilogy plot
-sim.ber = np.divide(sim.bit_error, sim.frame_count * len_k)
-sim.bler = np.divide(sim.frame_error, sim.frame_count)
-plt.semilogy(sim.snr_points, sim.ber, 'b--', label='BER')
-plt.semilogy(sim.snr_points, sim.bler, 'b-', label='BLER')
-plt.xlabel('SNR (dB)')
-plt.ylabel('BER/BLER')
-plt.title('Error Correction Performance')
-plt.legend()
-plt.show()
+if(sim.plot_enable):
+    # Calculate BER/BLER and present in a semilogy plot
+    sim.ber = np.divide(sim.bit_error, sim.frame_count * len_k)
+    sim.bler = np.divide(sim.frame_error, sim.frame_count)
+    plt.semilogy(sim.snr_points, sim.ber, 'b--', label='BER')
+    plt.semilogy(sim.snr_points, sim.bler, 'b-', label='BLER')
+    plt.xlabel('SNR (dB)')
+    plt.ylabel('BER/BLER')
+    plt.title('Error Correction Performance')
+    plt.legend()
+    plt.show()
 
 '''End simulation'''
 
@@ -173,4 +169,5 @@ TODO:
 --> Work on GUI
 --> Multi-threading option
 --> Add information content on GUI, videos pictures, etc.
+--> Assign ID to the run, save to database?
 '''
