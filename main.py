@@ -84,14 +84,9 @@ for item1, item2, item3 in zip(vec_dec_sch, vec_dec_sch_depth, vec_dec_sch_dir):
     print(item1, item2, item3)
 
 # Decoder-related vectors
-mem_alpha  = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
-mem_beta_l = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
-mem_beta_r = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
-
-# mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
-# mem_beta      = np.zeros((batch_size, len_logn + 1, len_n), dtype=int)
-# mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-# mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
+mem_alpha =  [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
+mem_beta_l = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
+mem_beta_r = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
 
 '''Begin simulation'''
 
@@ -117,9 +112,9 @@ for nsnr in range(0, len_simpoints):
       if(sim.qbits_enable):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
-      mem_alpha[:,len_logn,:] = vec_llr
+      mem_alpha[len_logn][:] = vec_llr
       dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
-             vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, \
+             vec_dec_sch_size,  vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
              sim.qbits_enable, quant_intl_max, quant_intl_min)
 
       #Update frame and error counts
