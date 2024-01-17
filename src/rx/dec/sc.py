@@ -45,11 +45,13 @@ def dec_sc_h(mem_beta, llr, is_frozen, mem_alpha_ptr):
         mem_beta[b, 0, mem_alpha_ptr[0]] = 0 if is_frozen else 1 if llr[b] < 0 else 0
 
 
-def dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, qbits_enable, quant_intl_max, quant_intl_min):
+def dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
+           vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, \
+           qbits_enable, quant_intl_max, quant_intl_max):
     info_ctr = 0
     for i in range(len(vec_dec_sch)):
         if vec_dec_sch[i] == 'F':
-            dec_sc_f(mem_alpha, vec_dec_sch_size[i], vec_dec_sch_depth[i], mem_alpha_ptr, qbits_enable, quant_intl_max, quant_intl_min)
+            dec_sc_f(mem_alpha, vec_dec_sch_size[i], vec_dec_sch_depth[i], mem_alpha_ptr, qbits_enable, quant_intl_max, quant_intl_max)
         elif vec_dec_sch[i] == 'G':
             dec_sc_g(mem_alpha, mem_beta, vec_dec_sch_size[i], vec_dec_sch_depth[i], mem_alpha_ptr, qbits_enable, quant_intl_max, quant_intl_min)
             mem_alpha_ptr[vec_dec_sch_depth[i]] += vec_dec_sch_size[i]

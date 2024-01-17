@@ -66,8 +66,8 @@ vec_decoded = np.zeros((batch_size,len_k), dtype=int)
 quant_step       = 2 ** sim.qbits_frac
 quant_chnl_upper = (2 ** (sim.qbits_chnl -1) - 1)/quant_step
 quant_chnl_lower = (-(2 ** (sim.qbits_chnl -1)))//quant_step
-quant_intl_upper = (2 ** (sim.qbits_intl -1) - 1)/quant_step
-quant_intl_lower = (-(2 ** (sim.qbits_intl -1)))//quant_step
+quant_intl_max = (2 ** (sim.qbits_intl -1) - 1)/quant_step
+quant_intl_min = (-(2 ** (sim.qbits_intl -1)))//quant_step
 
 '''One-time preparation for the simulation'''
 
@@ -118,9 +118,9 @@ for nsnr in range(0, len_simpoints):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
       mem_alpha[:,len_logn,:] = vec_llr
-      # mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-      # mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
-      # dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
+      dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
+             vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, \
+             sim.qbits_enable, quant_intl_max, quant_intl_min)
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size

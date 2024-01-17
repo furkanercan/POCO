@@ -213,7 +213,7 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
 
 
 def create_decoding_schedule(vec_frozen, sch_limit):
-    dec_alg = "Fast-SSC"
+    dec_alg = "SC"
     vec_dec_sch_init = ['F', 'H', 'G', 'H', 'C']
     vec_dec_sch = []
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
