@@ -6,17 +6,19 @@ def isLeaf(vec_sch):
         vec_sch == 'R0' or \
         vec_sch == 'R1' or \
         vec_sch == 'REP' or \
-        vec_sch == 'SPC'):
+        vec_sch == 'SPC' or \
+        vec_sch == 'ML_0011' or \
+        vec_sch == 'ML_0101'):
         return 1
     else:
         return 0
 
-def call_decoding_schedule(target_sch, base_vector, limit):
+def call_decoding_schedule(vec_dec_sch, base_vector, limit):
     for i in range(len(base_vector)):
         if(base_vector[i] == 'H' and limit > 1):
-            call_decoding_schedule(target_sch, base_vector, limit-1)
+            call_decoding_schedule(vec_dec_sch, base_vector, limit-1)
         else:
-            target_sch.append(base_vector[i])
+            vec_dec_sch.append(base_vector[i])
 
 def create_decoding_stages(vec_sch, sch_limit):
     vec_stage = []
@@ -63,12 +65,12 @@ def create_decoding_direction(vec_sch, vec_stagesize, sch_limit):
             sc_direction.append(0)
     return sc_direction
 
-def create_decoding_direction2(vec_sch):
+def create_decoding_direction_fast(vec_sch):
     
     sc_direction = []
-    directionStack = []
+    directionStack = [0]
 
-    for item in vec_sch:
+    for iteration, item in enumerate(vec_sch):
         if item == "F":
             directionStack.append(0)
             sc_direction.append(0)
@@ -211,19 +213,24 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
 
 
 def create_decoding_schedule(vec_frozen, sch_limit):
+    dec_alg = "Fast-SSC"
     vec_dec_sch_init = ['F', 'H', 'G', 'H', 'C']
     vec_dec_sch = []
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
-    vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 1)
-    vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
-    create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1)
-    vec_dec_sch_dir = create_decoding_direction2(vec_dec_sch_fast)
-    # vec_dec_sch_dir = create_decoding_direction(vec_dec_sch, vec_dec_sch_size, sch_limit)
-    # vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
+    if(dec_alg == "Fast-SSC"):
+        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 1)
+        vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
+        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1)
+        vec_dec_sch_dir = create_decoding_direction_fast(vec_dec_sch_fast)
+        vec_dec_sch = vec_dec_sch_fast
+    else: #(dec_alg == "SC")
+        vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch, sch_limit)
+        vec_dec_sch_dir = create_decoding_direction(vec_dec_sch, vec_dec_sch_size, sch_limit)
+        vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
     
     # print("Frozen Vector:", vec_frozen)
     # print("Decoding stage sizes:", vec_sch_size)
     # print("Decoding direction for B memory:", vec_sch_dir)
     # print("Decoding schedule with info indices:", vec_sch)
     
-    return vec_dec_sch, vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir
+    return vec_dec_sch,vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir

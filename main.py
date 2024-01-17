@@ -78,16 +78,20 @@ vec_polar_info_indices, vec_polar_isfrozen = create_polar_indices(len_n, len_k, 
 polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
-vec_dec_sch, vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
+vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
 
-# for item1, item2, item3, item4 in zip(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir):
-#     print(item1, item2, item3, item4)
+for item1, item2, item3 in zip(vec_dec_sch, vec_dec_sch_depth, vec_dec_sch_dir):
+    print(item1, item2, item3)
 
 # Decoder-related vectors
-mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
-mem_beta      = np.zeros((batch_size, len_logn + 1, len_n), dtype=int)
-mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
+mem_alpha  = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
+mem_beta_l = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
+mem_beta_r = [np.zeros(batch_size, 2 ** i) for i in range(len_logn + 1)]
+
+# mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
+# mem_beta      = np.zeros((batch_size, len_logn + 1, len_n), dtype=int)
+# mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
+# mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
 
 '''Begin simulation'''
 
@@ -114,9 +118,9 @@ for nsnr in range(0, len_simpoints):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
       mem_alpha[:,len_logn,:] = vec_llr
-      mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-      mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
-      dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
+      # mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
+      # mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
+      # dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size
@@ -151,6 +155,8 @@ if(sim.plot_enable):
 '''
 TODO:
 --> Insert fast nodes
+--> Insert fast track: No bit flips, no decoding
+--> Fast node parameters (currently fixed to values) to config file
 --> Insert readme file
 --> Structure input file
 --> Create more stucts for parameters for portability
