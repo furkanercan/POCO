@@ -9,8 +9,9 @@ def create_polar_enc_matrix(len_logn, vec_polar_info_indices):
     for _ in range(len_logn-1):
         polar_enc_matrix = np.kron(polar_enc_matrix, polar_enc_matrix_core)
 
+    polar_enc_matrix_full = polar_enc_matrix
     polar_enc_matrix = polar_enc_matrix[vec_polar_info_indices]
-    return polar_enc_matrix
+    return polar_enc_matrix_full, polar_enc_matrix
 
 def create_polar_indices(len_n, len_k, vec_polar_rel_idx):
     vec_polar_isfrozen = np.ones(len_n, dtype=int)

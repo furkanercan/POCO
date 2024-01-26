@@ -76,7 +76,7 @@ quant_intl_min = (-(2 ** (sim.qbits_intl -1)))//quant_step
 vec_polar_info_indices, vec_polar_isfrozen = create_polar_indices(len_n, len_k, vec_polar_rel_idx)
 
 # Generate the polar encoding matrix based on master code length
-polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
+polar_enc_matrix_full, polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
 vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
@@ -93,8 +93,7 @@ mem_beta_r = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
 '''Begin simulation'''
 
 print(generate_sim_header())
-status_msg = []
-prev_status_msg = []
+status_msg, prev_status_msg = [], []
 
 for nsnr in range(0, len_simpoints):
 
@@ -121,6 +120,8 @@ for nsnr in range(0, len_simpoints):
       dec_fastssc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
                   vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
                   sim.qbits_enable, quant_intl_max, quant_intl_min)
+      vec_decoded = (mem_beta_l[len_logn] @ polar_enc_matrix_full  % 2)
+      vec_decoded = vec_decoded[:,vec_polar_info_indices]
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size

@@ -223,9 +223,9 @@ def create_decoding_schedule(vec_frozen, sch_limit):
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
     vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
     if(dec_alg == "Fast-SSC"):
-        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 0, 0)
+        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 0)
         vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
-        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 0, 0, 0, 0, 0)
+        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 0, 0, 0, 0)
         vec_dec_sch_dir = create_decoding_direction_fast(vec_dec_sch_fast)
         vec_dec_sch = vec_dec_sch_fast
     else: #(dec_alg == "SC")
