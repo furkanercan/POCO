@@ -66,12 +66,12 @@ def dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
             dec_sc_g(mem_alpha, mem_beta_l, vec_dec_sch_size[i], vec_dec_sch_depth[i], qbits_enable, quant_intl_max, quant_intl_min)
         elif vec_dec_sch[i] == 'C':
             dec_sc_c(mem_beta_l, mem_beta_r, vec_dec_sch_size[i], vec_dec_sch_depth[i], vec_dec_sch_dir[i])
-        elif vec_dec_sch[i] == 'H': #Frozen index hit
+        elif vec_dec_sch[i] == 'R0':
             if(vec_dec_sch_dir[i] == 0):
                 mem_beta_l[0][:, 0] = 0
             else:
                 mem_beta_r[0][:, 0] = 0
-        elif vec_dec_sch[i] == 'I': #Info index hit
+        elif vec_dec_sch[i] == 'R1':
             dec_sc_h(mem_beta_l, mem_beta_r, mem_alpha[0][:, 0], vec_dec_sch_dir[i])
             if(vec_dec_sch_dir[i] == 0):
                 vec_decoded[:,info_ctr] = mem_beta_l[0][:, 0]
