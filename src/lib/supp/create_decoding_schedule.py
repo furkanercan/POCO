@@ -94,19 +94,19 @@ def embed_frozen_nodes(vec_sch, vec_frozen):
             j+=1
     return vec_sch
 
-def create_key_special_nodes(vec_dec_sch, vec_frozen, en_R0, en_R1, en_REP):
+def create_key_special_nodes(vec_dec_sch, sim):
     i = 0
     vec_dec_sch_fast = []
     while i < len(vec_dec_sch):
         pattern = ''.join(vec_dec_sch[i:i+5])
 
-        if (pattern == "FR0GR0C" and en_R0):  
+        if (pattern == "FR0GR0C" and sim.en_r0):  
             vec_dec_sch_fast.append("R0")
             i += 4
-        elif (pattern == "FR1GR1C" and en_R1): 
+        elif (pattern == "FR1GR1C" and sim.en_r1): 
             vec_dec_sch_fast.append("R1")
             i += 4
-        elif (pattern == "FR0GR1C" and en_REP): 
+        elif (pattern == "FR0GR1C" and sim.en_rep): 
             vec_dec_sch_fast.append("REP")
             i += 4
         else:
@@ -114,9 +114,7 @@ def create_key_special_nodes(vec_dec_sch, vec_frozen, en_R0, en_R1, en_REP):
         i += 1
     return vec_dec_sch_fast
 
-def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, \
-                         size_R0, size_R1, size_Rep, size_SPC, \
-                         enable_R0, enable_R1, enable_Rep, enable_SPC, enable_0011, enable_0101):
+def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, sim):
     iterator_schedule = list(vec_dec_sch_fast)
     vec_dec_sch_fast.clear()
 
@@ -133,22 +131,22 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
         vec_dec_sch_size.append(iterator_stagesize[i])
         vec_dec_sch_depth.append(iterator_stageidx[i])
 
-        if pattern == "FR0GREPC" and size_Rep >= 4 and enable_Rep:
+        if pattern == "FR0GREPC" and sim.rep_size >= 4 and sim.en_rep:
             vec_dec_sch_fast.append("REP")
             i += 4
-        elif pattern == "FR0GR0C" and size_R0 >= 4 and enable_R0:
+        elif pattern == "FR0GR0C" and sim.r0_size >= 4 and sim.en_r0:
             vec_dec_sch_fast.append("R0")
             i += 4
-        elif pattern == "FR1GR1C" and size_R1 >= 4 and enable_R1:
+        elif pattern == "FR1GR1C" and sim.r1_size >= 4 and sim.en_r1:
             vec_dec_sch_fast.append("R1")
             i += 4
-        elif pattern == "FREPGR1C" and size_SPC >= 4 and enable_SPC:
+        elif pattern == "FREPGR1C" and sim.spc_size >= 4 and sim.en_spc:
             vec_dec_sch_fast.append("SPC")
             i += 4
-        elif pattern == "FR0GR1C" and enable_0011:
+        elif pattern == "FR0GR1C" and sim.en_0011:
             vec_dec_sch_fast.append("ML_0011")
             i += 4
-        elif pattern == "FREPGREPC" and enable_0101:
+        elif pattern == "FREPGREPC" and sim.en_0101:
             vec_dec_sch_fast.append("ML_0101")
             i += 4
         else:
@@ -177,19 +175,19 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
             vec_dec_sch_size.append(iterator_stagesize[i])
             vec_dec_sch_depth.append(iterator_stageidx[i])
 
-            if pattern == "FR0GREPC" and size_Rep >= iterator_stagesize[i]  and enable_Rep:
+            if pattern == "FR0GREPC" and sim.rep_size >= iterator_stagesize[i]  and sim.en_rep:
                 vec_dec_sch_fast.append("REP")
                 i += 4
                 istherehope = True
-            elif pattern == "FR0GR0C" and size_R0 >= iterator_stagesize[i]  and enable_R0:
+            elif pattern == "FR0GR0C" and sim.r0_size >= iterator_stagesize[i]  and sim.en_r0:
                 vec_dec_sch_fast.append("R0")
                 i += 4
                 istherehope = True
-            elif pattern == "FSPCGR1C" and size_SPC >= iterator_stagesize[i] and enable_SPC:
+            elif pattern == "FSPCGR1C" and sim.spc_size >= iterator_stagesize[i] and sim.en_spc:
                 vec_dec_sch_fast.append("SPC")
                 i += 4
                 istherehope = True
-            elif pattern == "FR1GR1C" and size_R1 >= iterator_stagesize[i] and enable_R1:
+            elif pattern == "FR1GR1C" and sim.r1_size >= iterator_stagesize[i] and sim.en_r1:
                 vec_dec_sch_fast.append("R1")
                 i += 4
                 istherehope = True
@@ -202,16 +200,16 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
             there_is_still_hope = False
 
 
-def create_decoding_schedule(vec_frozen, sch_limit):
+def create_decoding_schedule(sim, vec_frozen, sch_limit):
     dec_alg = "Fast-SSC"
     vec_dec_sch_init = ['F', 'H', 'G', 'H', 'C']
     vec_dec_sch = []
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
     vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
     if(dec_alg == "Fast-SSC"):
-        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 1)
+        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, sim)
         vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
-        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1, 1, 0, 0)
+        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, sim)
         vec_dec_sch_dir = create_decoding_direction_fast(vec_dec_sch_fast)
         vec_dec_sch = vec_dec_sch_fast
     else: #(dec_alg == "SC")

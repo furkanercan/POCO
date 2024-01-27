@@ -3,18 +3,30 @@
     "info_bit_length" : 512,
 
     "snr_start" : 1,
-    "snr_end" : 4,
+    "snr_end" : 3,
     "snr_step" : 0.25,
     
     "num_frames" : 10000,
     "num_errors" : 50,
     "num_max_fr" : 1000000,
 
-    "qbits_enable" : 1,
+    "qbits_enable" : 0,
     "qbits_chnl"   : 5,
     "qbits_intl"   : 6,
     "qbits_frac"   : 1,
 
-    "plot_enable"  : 0
-    
+    "plot_enable"  : 1,
+
+    "fast_r0_enable" : 1,
+    "fast_r1_enable" : 1,
+    "fast_rep_enable" : 1,
+    "fast_spc_enable" : 1,
+    "fast_0011_enable" : 0,
+    "fast_0101_enable" : 0,
+
+    "fast_r0_max_size" : 1024,
+    "fast_r1_max_size" : 1024,
+    "fast_rep_max_size" : 1024,
+    "fast_spc_max_size" : 1024
+
 }

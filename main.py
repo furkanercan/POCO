@@ -82,7 +82,7 @@ vec_polar_info_indices, vec_polar_isfrozen = create_polar_indices(len_n, len_k, 
 polar_enc_matrix_full, polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
-vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
+vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(sim, vec_polar_isfrozen, len_logn)
 
 with open('instr.txt', 'w') as file:
     for item1, item2, item3 in zip(vec_dec_sch, vec_dec_sch_depth, vec_dec_sch_dir):
@@ -163,9 +163,7 @@ if(sim.plot_enable):
 '''
 TODO:
 --> Insert complex fast nodes
---> Insert fast track: No bit flips, no decoding
 --> Fast node parameters (currently fixed to values) to config file
---> Insert readme file
 --> Structure input file
 --> Create more stucts for parameters for portability
 --> Create option to log sim outputs to a file
