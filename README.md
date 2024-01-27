@@ -65,7 +65,7 @@ By experience, make sure you are using the correct Python Interpreter in case th
 
 ### Installation
 
-Experience seamless setup with minimal effort. No complex installation procedures are required beyond ensuring the prerequisite libraries are in place. If you're a VSCode user, effortlessly open the repository as a folder (project) and execute the `main.py` script. Harness the power of simplicity—our script utilizes JSON files for configuration, and a plethora of examples are readily available for users to explore and leverage. Dive into the world of [Your Project Name] effortlessly and explore the endless possibilities it offers.
+No complex installation procedures are required beyond ensuring the prerequisite libraries are in place. If you're a VSCode user, open the repository as a folder (project) and execute the `main.py` script. Our script utilizes JSON files for configuration, and a plethora of examples are readily available for users to explore and leverage.
 
 ### Usage
 
@@ -77,19 +77,31 @@ The simulation setup is carried out using the `config.json` file. An example sna
     "info_bit_length" : 512,
 
     "snr_start" : 1,
-    "snr_end" : 4,
+    "snr_end" : 3,
     "snr_step" : 0.25,
     
     "num_frames" : 10000,
     "num_errors" : 50,
     "num_max_fr" : 1000000,
 
-    "qbits_enable" : 1,
+    "qbits_enable" : 0,
     "qbits_chnl"   : 5,
     "qbits_intl"   : 6,
     "qbits_frac"   : 1,
 
-    "plot_enable"  : 0
+    "plot_enable"  : 0,
+
+    "fast_r0_enable" : 1,
+    "fast_r1_enable" : 1,
+    "fast_rep_enable" : 1,
+    "fast_spc_enable" : 1,
+    "fast_0011_enable" : 0,
+    "fast_0101_enable" : 0,
+
+    "fast_r0_max_size" : 1024,
+    "fast_r1_max_size" : 1024,
+    "fast_rep_max_size" : 1024,
+    "fast_spc_max_size" : 1024
 }
 ```
 
@@ -124,9 +136,11 @@ SNR (dB)    BER           FER           ITER       Frames     Errors     Time
 3.000e+00   2.67857e-04   1.93050e-03   1.00e+00   2.59e+04   5.00e+01   00:00:59
 ```
 
+![Example BER/FER plot](src/images/readme_ex_plot.png)
+
 ## Contributing
 
-We welcome contributions to improve [Your Project Name]! Whether you want to report a bug, request a new feature, or contribute code changes, your help is appreciated.
+We welcome contributions to improve POCO! Whether you want to report a bug, request a new feature, or contribute code changes, your help is appreciated.
 
 ### Code Contributions
 
