@@ -211,17 +211,11 @@ def create_decoding_schedule(vec_frozen, sch_limit):
     if(dec_alg == "Fast-SSC"):
         vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 1)
         vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
-        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1, 0, 0, 0)
+        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1, 1, 0, 0)
         vec_dec_sch_dir = create_decoding_direction_fast(vec_dec_sch_fast)
         vec_dec_sch = vec_dec_sch_fast
     else: #(dec_alg == "SC")
         vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch, sch_limit)
         vec_dec_sch_dir = create_decoding_direction(vec_dec_sch, vec_dec_sch_size, sch_limit)
-        
-    
-    # print("Frozen Vector:", vec_frozen)
-    # print("Decoding stage sizes:", vec_sch_size)
-    # print("Decoding direction for B memory:", vec_sch_dir)
-    # print("Decoding schedule with info indices:", vec_sch)
     
     return vec_dec_sch,vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir

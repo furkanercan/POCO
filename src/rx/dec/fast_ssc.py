@@ -24,6 +24,19 @@ def dec_fastssc_rep(mem_alpha, mem_beta_l, mem_beta_r, stage_depth, sch_dir):
         else:
             mem_beta_r[stage_depth][batch_idx,:] = rep_sgn
 
+def dec_fastssc_spc(mem_alpha, mem_beta_l, mem_beta_r, stage_depth, sch_dir):
+    hard_decisions = np.where(mem_alpha[stage_depth] < 0, 1, 0)
+    parity = np.sum(hard_decisions, axis=1) % 2 == 1
+
+    for i in range(mem_alpha[stage_depth].shape[0]):
+        if parity[i]:
+            min_entry_index = np.argmin(np.abs(mem_alpha[stage_depth][i, :]))
+            hard_decisions[i, min_entry_index] ^= 1
+
+    if sch_dir == 0:
+        mem_beta_l[stage_depth][:, :] = hard_decisions
+    else:
+        mem_beta_r[stage_depth][:, :] = hard_decisions
 
 def dec_fastssc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
                   vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
@@ -41,3 +54,5 @@ def dec_fastssc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
             dec_fastssc_r1(mem_alpha, mem_beta_l, mem_beta_r, vec_dec_sch_depth[i], vec_dec_sch_dir[i])
         elif vec_dec_sch[i] == 'REP':
             dec_fastssc_rep(mem_alpha, mem_beta_l, mem_beta_r, vec_dec_sch_depth[i], vec_dec_sch_dir[i])
+        elif vec_dec_sch[i] == 'SPC':
+            dec_fastssc_spc(mem_alpha, mem_beta_l, mem_beta_r, vec_dec_sch_depth[i], vec_dec_sch_dir[i])
