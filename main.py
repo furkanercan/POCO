@@ -61,6 +61,7 @@ vec_info    = np.zeros((batch_size,len_k), dtype=int)
 vec_encoded = np.zeros((batch_size,len_n), dtype=int)
 vec_mod     = np.zeros((batch_size,len_n), dtype=int)
 vec_awgn    = np.zeros((batch_size,len_n), dtype=float)
+vec_comp    = np.zeros((batch_size,len_n), dtype=float)
 vec_llr     = np.zeros((batch_size,len_n), dtype=float)
 vec_decoded = np.zeros((batch_size,len_k), dtype=int)
 
@@ -69,6 +70,8 @@ quant_chnl_upper = (2 ** (sim.qbits_chnl -1) - 1)/quant_step
 quant_chnl_lower = (-(2 ** (sim.qbits_chnl -1)))//quant_step
 quant_intl_max = (2 ** (sim.qbits_intl -1) - 1)/quant_step
 quant_intl_min = (-(2 ** (sim.qbits_intl -1)))//quant_step
+
+flag_bypass_decoder = 0
 
 '''One-time preparation for the simulation'''
 
@@ -104,6 +107,7 @@ for nsnr in range(0, len_simpoints):
 
   while(sim.frame_count[nsnr] < sim.num_frames or sim.frame_error[nsnr] < sim.num_errors):# and sim_frame_count > sim_num_max_fr):
       
+      flag_bypass_decoder = 0
       vec_info = np.random.choice([0, 1], size=(batch_size, len_k))                  # Generate information
       vec_encoded = polar_encode(vec_info, polar_enc_matrix)                          # Encode information
       vec_mod = 1-2*vec_encoded                                                      # Apply BPSK modulation
@@ -114,19 +118,22 @@ for nsnr in range(0, len_simpoints):
         vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
       mem_alpha[len_logn][:] = vec_llr
-      # dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
-      #        vec_dec_sch_size,  vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
-      #        sim.qbits_enable, quant_intl_max, quant_intl_min)
-      dec_fastssc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
-                  vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
-                  sim.qbits_enable, quant_intl_max, quant_intl_min)
-      vec_decoded = (mem_beta_l[len_logn] @ polar_enc_matrix_full  % 2)
-      vec_decoded = vec_decoded[:,vec_polar_info_indices]
+      if(sim.lutsim_enable):
+         vec_comp = np.logical_and(vec_mod * vec_awgn < 0, np.abs(vec_awgn) > np.abs(vec_mod))
+         flag_bypass_decoder = not np.any(vec_comp)
+
+      if not flag_bypass_decoder:
+        dec_fastssc(vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
+                    vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, \
+                    sim.qbits_enable, quant_intl_max, quant_intl_min)
+        vec_decoded = (mem_beta_l[len_logn] @ polar_enc_matrix_full  % 2)
+        vec_decoded = vec_decoded[:,vec_polar_info_indices]
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size
-      sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
-      sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
+      if not flag_bypass_decoder:
+        sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
+        sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
 
       if(sim.frame_count[nsnr] % 100 == 0):
         time_end = time.time()
@@ -155,7 +162,7 @@ if(sim.plot_enable):
 
 '''
 TODO:
---> Insert fast nodes
+--> Insert complex fast nodes
 --> Insert fast track: No bit flips, no decoding
 --> Fast node parameters (currently fixed to values) to config file
 --> Insert readme file

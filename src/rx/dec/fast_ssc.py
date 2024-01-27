@@ -38,9 +38,9 @@ def dec_fastssc_spc(mem_alpha, mem_beta_l, mem_beta_r, stage_depth, sch_dir):
     else:
         mem_beta_r[stage_depth][:, :] = hard_decisions
 
-def dec_fastssc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
-                  vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, vec_polar_isfrozen, \
-                  qbits_enable, quant_intl_max, quant_intl_min):
+def dec_fastssc(vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
+                vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, \
+                qbits_enable, quant_intl_max, quant_intl_min):
     for i in range(len(vec_dec_sch)):
         if vec_dec_sch[i] == 'F':
             dec_sc_f(mem_alpha, vec_dec_sch_size[i], vec_dec_sch_depth[i], qbits_enable, quant_intl_max)
