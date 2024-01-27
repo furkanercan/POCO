@@ -95,34 +95,20 @@ def embed_frozen_nodes(vec_sch, vec_frozen):
     return vec_sch
 
 def create_key_special_nodes(vec_dec_sch, vec_frozen, en_R0, en_R1, en_REP):
-    pattern_2b = []
-    for i in range(0, len(vec_frozen), 2):
-        pattern = ''.join(map(str, vec_frozen[i:i+2]))
-        if pattern == "11":
-            pattern_2b.append("R0")
-        elif pattern == "00":
-            pattern_2b.append("R1")
-        elif pattern == "10":
-            pattern_2b.append("REP")
-        else:
-            print(f"Unrecognized frozen bit pattern: {pattern}")
-            raise RuntimeError("Simulation terminated due to unrecognized frozen bit pattern: Check correctness of the polar reliability index file.")
-    
-    sn_cntr = 0
     i = 0
     vec_dec_sch_fast = []
     while i < len(vec_dec_sch):
         pattern = ''.join(vec_dec_sch[i:i+5])
 
-        if pattern == "FHGHC":  
-            if (pattern_2b[sn_cntr] == "R0"  and en_R0) or \
-               (pattern_2b[sn_cntr] == "R1"  and en_R1) or \
-               (pattern_2b[sn_cntr] == "REP" and en_REP):
-                vec_dec_sch_fast.append(pattern_2b[sn_cntr])
-                i += 4
-            else:  
-                vec_dec_sch_fast.append(vec_dec_sch[i])
-            sn_cntr += 1
+        if (pattern == "FR0GR0C" and en_R0):  
+            vec_dec_sch_fast.append("R0")
+            i += 4
+        elif (pattern == "FR1GR1C" and en_R1): 
+            vec_dec_sch_fast.append("R1")
+            i += 4
+        elif (pattern == "FR0GR1C" and en_REP): 
+            vec_dec_sch_fast.append("REP")
+            i += 4
         else:
             vec_dec_sch_fast.append(vec_dec_sch[i])
         i += 1
@@ -223,9 +209,9 @@ def create_decoding_schedule(vec_frozen, sch_limit):
     call_decoding_schedule(vec_dec_sch, vec_dec_sch_init, sch_limit)
     vec_dec_sch = embed_frozen_nodes(vec_dec_sch, vec_frozen)
     if(dec_alg == "Fast-SSC"):
-        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 0)
+        vec_dec_sch_fast = create_key_special_nodes(vec_dec_sch, vec_frozen, 1, 1, 1)
         vec_dec_sch_size, vec_dec_sch_depth = create_decoding_stages(vec_dec_sch_fast, sch_limit)
-        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 0, 0, 0, 0)
+        create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 1024, 1024, 1024, 1024, 1, 1, 1, 0, 0, 0)
         vec_dec_sch_dir = create_decoding_direction_fast(vec_dec_sch_fast)
         vec_dec_sch = vec_dec_sch_fast
     else: #(dec_alg == "SC")

@@ -15,6 +15,6 @@
     "qbits_intl"   : 6,
     "qbits_frac"   : 1,
 
-    "plot_enable"  : 1
+    "plot_enable"  : 0
     
 }

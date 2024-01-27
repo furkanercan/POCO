@@ -45,7 +45,7 @@ sim.snr_points  = np.arange(sim.snr_start, sim.snr_end + sim.snr_step, sim.snr_s
 # Read the polar reliability index file
 vec_polar_rel_idx  = readfile_polar_rel_idx(sim.filepath_polar_rel_idx)
 
-batch_size      = 1
+batch_size      = 100
 len_k           = sim.len_k
 len_n           = len(vec_polar_rel_idx)
 len_logn        = int(math.log2(len_n))
