@@ -115,7 +115,7 @@ for nsnr in range(0, len_simpoints):
       vec_llr = 2 * (vec_mod + vec_awgn) / awgn_var                                  # Apply noise, obtain LLRs
       
       if(sim.qbits_enable):
-        vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
+        llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
       mem_alpha[len_logn][:] = vec_llr
       if(sim.lutsim_enable):
@@ -173,4 +173,6 @@ TODO:
 --> Multi-threading option
 --> Add information content on GUI, videos pictures, etc.
 --> Assign ID to the run, save to database?
+--> Hardware-exact decoding support
+--> Hypothetical test vector generation support
 '''
