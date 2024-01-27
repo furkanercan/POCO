@@ -119,8 +119,8 @@ for nsnr in range(0, len_simpoints):
 
       mem_alpha[len_logn][:] = vec_llr
       if(sim.lutsim_enable):
-         vec_comp = np.logical_and(vec_mod * vec_awgn < 0, np.abs(vec_awgn) > np.abs(vec_mod))
-         flag_bypass_decoder = not np.any(vec_comp)
+        vec_comp = np.logical_and(vec_mod * vec_awgn < 0, np.abs(vec_awgn) > np.abs(vec_mod))
+        flag_bypass_decoder = not np.any(vec_comp)
 
       if not flag_bypass_decoder:
         dec_fastssc(vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \

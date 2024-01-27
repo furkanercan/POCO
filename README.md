@@ -55,16 +55,44 @@ The following Python libraries are required:
 - **numpy** (version 1.21.2)
   ```bash
   pip install numpy==1.21.2
-
+  ```
 - **matplotlib** (version 3.4.3)
   ```bash
-pip install matplotlib==3.4.3
+  pip install matplotlib==3.4.3
+  ```
+
+By experience, make sure you are using the correct Python Interpreter in case the installed packages are unrecognized.
 
 ### Installation
 
 Experience seamless setup with minimal effort. No complex installation procedures are required beyond ensuring the prerequisite libraries are in place. If you're a VSCode user, effortlessly open the repository as a folder (project) and execute the `main.py` script. Harness the power of simplicity—our script utilizes JSON files for configuration, and a plethora of examples are readily available for users to explore and leverage. Dive into the world of [Your Project Name] effortlessly and explore the endless possibilities it offers.
 
 ### Usage
+
+The simulation setup is carried out using the `config.json` file. An example snapshot is provided below:
+
+```json
+{
+    "filepath_polar_rel_idx" : "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
+    "info_bit_length" : 512,
+
+    "snr_start" : 1,
+    "snr_end" : 4,
+    "snr_step" : 0.25,
+    
+    "num_frames" : 10000,
+    "num_errors" : 50,
+    "num_max_fr" : 1000000,
+
+    "qbits_enable" : 1,
+    "qbits_chnl"   : 5,
+    "qbits_intl"   : 6,
+    "qbits_frac"   : 1,
+
+    "plot_enable"  : 0
+}
+```
+
 The following example is a terminal output of POCO with 5G polar codes of N=1024, K=512:
 ```
 #################################################################################
