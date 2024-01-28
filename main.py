@@ -24,6 +24,7 @@ import json
 import matplotlib.pyplot as plt
 from src.tx.enc.encode import *
 from src.rx.dec.sc import *
+from src.rx.dec.fast_ssc import *
 from src.lib.supp.modules import *
 from src.lib.supp.readfile_polar_rel_idx import *
 from src.lib.supp.create_decoding_schedule import *
@@ -44,7 +45,7 @@ sim.snr_points  = np.arange(sim.snr_start, sim.snr_end + sim.snr_step, sim.snr_s
 # Read the polar reliability index file
 vec_polar_rel_idx  = readfile_polar_rel_idx(sim.filepath_polar_rel_idx)
 
-batch_size      = 1
+batch_size      = 100
 len_k           = sim.len_k
 len_n           = len(vec_polar_rel_idx)
 len_logn        = int(math.log2(len_n))
@@ -60,14 +61,17 @@ vec_info    = np.zeros((batch_size,len_k), dtype=int)
 vec_encoded = np.zeros((batch_size,len_n), dtype=int)
 vec_mod     = np.zeros((batch_size,len_n), dtype=int)
 vec_awgn    = np.zeros((batch_size,len_n), dtype=float)
+vec_comp    = np.zeros((batch_size,len_n), dtype=float)
 vec_llr     = np.zeros((batch_size,len_n), dtype=float)
 vec_decoded = np.zeros((batch_size,len_k), dtype=int)
 
 quant_step       = 2 ** sim.qbits_frac
 quant_chnl_upper = (2 ** (sim.qbits_chnl -1) - 1)/quant_step
 quant_chnl_lower = (-(2 ** (sim.qbits_chnl -1)))//quant_step
-quant_intl_upper = (2 ** (sim.qbits_intl -1) - 1)/quant_step
-quant_intl_lower = (-(2 ** (sim.qbits_intl -1)))//quant_step
+quant_intl_max = (2 ** (sim.qbits_intl -1) - 1)/quant_step
+quant_intl_min = (-(2 ** (sim.qbits_intl -1)))//quant_step
+
+flag_bypass_decoder = 0
 
 '''One-time preparation for the simulation'''
 
@@ -75,22 +79,24 @@ quant_intl_lower = (-(2 ** (sim.qbits_intl -1)))//quant_step
 vec_polar_info_indices, vec_polar_isfrozen = create_polar_indices(len_n, len_k, vec_polar_rel_idx)
 
 # Generate the polar encoding matrix based on master code length
-polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
+polar_enc_matrix_full, polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_polar_info_indices)
 
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
-vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(vec_polar_isfrozen, len_logn)
+vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(sim, vec_polar_isfrozen, len_logn)
+
+with open('instr.txt', 'w') as file:
+    for item1, item2, item3 in zip(vec_dec_sch, vec_dec_sch_depth, vec_dec_sch_dir):
+        print(item1, item2, item3, file=file)
 
 # Decoder-related vectors
-mem_alpha     = np.zeros((batch_size, len_logn + 1, len_n), dtype=float)
-mem_beta      = np.zeros((batch_size, len_logn + 1, len_n), dtype=int)
-mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
+mem_alpha =  [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
+mem_beta_l = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
+mem_beta_r = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
 
 '''Begin simulation'''
 
 print(generate_sim_header())
-status_msg = []
-prev_status_msg = []
+status_msg, prev_status_msg = [], []
 
 for nsnr in range(0, len_simpoints):
 
@@ -101,6 +107,7 @@ for nsnr in range(0, len_simpoints):
 
   while(sim.frame_count[nsnr] < sim.num_frames or sim.frame_error[nsnr] < sim.num_errors):# and sim_frame_count > sim_num_max_fr):
       
+      flag_bypass_decoder = 0
       vec_info = np.random.choice([0, 1], size=(batch_size, len_k))                  # Generate information
       vec_encoded = polar_encode(vec_info, polar_enc_matrix)                          # Encode information
       vec_mod = 1-2*vec_encoded                                                      # Apply BPSK modulation
@@ -108,17 +115,25 @@ for nsnr in range(0, len_simpoints):
       vec_llr = 2 * (vec_mod + vec_awgn) / awgn_var                                  # Apply noise, obtain LLRs
       
       if(sim.qbits_enable):
-        vec_llr = llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
+        llr_quantizer(vec_llr, quant_step, quant_chnl_lower, quant_chnl_upper)
 
-      mem_alpha[:,len_logn,:] = vec_llr
-      mem_alpha_ptr = np.zeros(len_logn + 1, dtype=int)
-      mem_beta_ptr  = np.zeros(len_logn + 1, dtype=int)
-      dec_sc(vec_decoded, vec_dec_sch, mem_alpha, mem_beta, mem_alpha_ptr, mem_beta_ptr, vec_dec_sch_size, vec_dec_sch_depth, vec_polar_isfrozen, sim.qbits_enable, quant_intl_upper, quant_intl_lower)
+      mem_alpha[len_logn][:] = vec_llr
+      if(sim.lutsim_enable):
+        vec_comp = np.logical_and(vec_mod * vec_awgn < 0, np.abs(vec_awgn) > np.abs(vec_mod))
+        flag_bypass_decoder = not np.any(vec_comp)
+
+      if not flag_bypass_decoder:
+        dec_fastssc(vec_dec_sch, mem_alpha, mem_beta_l, mem_beta_r, \
+                    vec_dec_sch_size, vec_dec_sch_dir, vec_dec_sch_depth, \
+                    sim.qbits_enable, quant_intl_max, quant_intl_min)
+        vec_decoded = (mem_beta_l[len_logn] @ polar_enc_matrix_full  % 2)
+        vec_decoded = vec_decoded[:,vec_polar_info_indices]
 
       #Update frame and error counts
       sim.frame_count[nsnr] += batch_size
-      sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
-      sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
+      if not flag_bypass_decoder:
+        sim.bit_error[nsnr] += np.sum(vec_decoded != vec_info)
+        sim.frame_error[nsnr] += np.sum(np.any(vec_decoded != vec_info, axis=1))
 
       if(sim.frame_count[nsnr] % 100 == 0):
         time_end = time.time()
@@ -147,8 +162,8 @@ if(sim.plot_enable):
 
 '''
 TODO:
---> Insert fast nodes
---> Insert readme file
+--> Insert complex fast nodes
+--> Fast node parameters (currently fixed to values) to config file
 --> Structure input file
 --> Create more stucts for parameters for portability
 --> Create option to log sim outputs to a file
@@ -156,4 +171,6 @@ TODO:
 --> Multi-threading option
 --> Add information content on GUI, videos pictures, etc.
 --> Assign ID to the run, save to database?
+--> Hardware-exact decoding support
+--> Hypothetical test vector generation support
 '''
