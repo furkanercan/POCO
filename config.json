@@ -10,11 +10,12 @@
     "num_errors" : 50,
     "num_max_fr" : 1000000,
 
-    "qbits_enable" : 1,
+    "qbits_enable" : 0,
     "qbits_chnl"   : 5,
     "qbits_intl"   : 6,
     "qbits_frac"   : 1,
 
-    "plot_enable"  : 1
+    "lutsim_enable" : 0,
+    "plot_enable"  : 0
     
 }
