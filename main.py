@@ -84,7 +84,7 @@ polar_enc_matrix_full, polar_enc_matrix = create_polar_enc_matrix(len_logn, vec_
 # Create the decoding schedule and helper variables to create a decoding instruction LUT
 vec_dec_sch, vec_dec_sch_size, vec_dec_sch_depth, vec_dec_sch_dir = create_decoding_schedule(sim, vec_polar_isfrozen, len_logn)
 
-with open('instr.txt', 'w') as file:
+with open('sc.instr', 'w') as file:
     for item1, item2, item3 in zip(vec_dec_sch, vec_dec_sch_depth, vec_dec_sch_dir):
         print(item1, item2, item3, file=file)
 
@@ -169,6 +169,7 @@ TODO:
 --> Insert complex fast nodes
 --> Fast node parameters (currently fixed to values) to config file
 --> Structure input file
+--> Support to exit decoding by a hotkey
 --> Create more stucts for parameters for portability
 --> Work on GUI
 --> Multi-threading option

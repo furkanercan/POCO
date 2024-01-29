@@ -3,3 +3,7 @@ build/
 dist/
 gui.py
 exmaple.py
+*.out
+*.png
+*.pdf
+*.instr
