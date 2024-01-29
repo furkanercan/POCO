@@ -95,7 +95,7 @@ mem_beta_r = [np.zeros((batch_size, 2**i)) for i in range(len_logn + 1)]
 
 '''Begin simulation'''
 
-print(generate_sim_header())
+print(generate_sim_header(sim))
 status_msg, prev_status_msg = [], []
 
 for nsnr in range(0, len_simpoints):
@@ -138,12 +138,12 @@ for nsnr in range(0, len_simpoints):
       if(sim.frame_count[nsnr] % 100 == 0):
         time_end = time.time()
         time_elapsed = time_end - time_start
-        status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_k, format_time(time_elapsed), 1, status_msg, prev_status_msg)
+        status_msg = report_sim_stats(sim, nsnr, len_k, format_time(time_elapsed), 1, status_msg, prev_status_msg)
         prev_status_msg = status_msg
   
   time_end = time.time()
   time_elapsed = time_end - time_start
-  status_msg = report_sim_stats(sim.snr_points[nsnr], sim.bit_error[nsnr], sim.frame_error[nsnr], sim.frame_count[nsnr], len_k, format_time(time_elapsed), 0, status_msg, prev_status_msg)
+  status_msg = report_sim_stats(sim, nsnr, len_k, format_time(time_elapsed), 0, status_msg, prev_status_msg)
   prev_status_msg = status_msg
 
 if(sim.plot_enable):
@@ -156,7 +156,11 @@ if(sim.plot_enable):
     plt.ylabel('BER/BLER')
     plt.title('Error Correction Performance')
     plt.legend()
-    plt.show()
+    # plt.show()
+    if(sim.save_output):
+      filename, _ = os.path.splitext(sim.path_output)
+      new_filename = filename + '.png'
+      plt.savefig(new_filename)
 
 '''End simulation'''
 
@@ -166,7 +170,6 @@ TODO:
 --> Fast node parameters (currently fixed to values) to config file
 --> Structure input file
 --> Create more stucts for parameters for portability
---> Create option to log sim outputs to a file
 --> Work on GUI
 --> Multi-threading option
 --> Add information content on GUI, videos pictures, etc.

@@ -16,6 +16,7 @@
     "qbits_frac"   : 1,
 
     "plot_enable"  : 1,
+    "save_output"  : 1,
 
     "fast_r0_enable" : 1,
     "fast_r1_enable" : 1,

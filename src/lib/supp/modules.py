@@ -1,8 +1,10 @@
+import os
+
 class Sim:
     def __init__(self, filepath_polar_rel_idx, len_k, snr_start, snr_end, snr_step, \
                  num_frames, num_errors, num_max_fr, \
                  qbits_enable, qbits_chnl, qbits_intl, qbits_frac, \
-                 plot_enable, lutsim_enable, \
+                 plot_enable, save_output, path_output, lutsim_enable, \
                  en_r0, en_r1, en_rep, en_spc, en_0011, en_0101, \
                  r0_size, r1_size, rep_size, spc_size):
         
@@ -30,32 +32,63 @@ class Sim:
         self.r1_size = r1_size
         self.rep_size = rep_size
         self.spc_size = spc_size
+        self.save_output = save_output
+        self.path_output = path_output
 
 
 def create_sim_from_config(config_data):
+    filepath_polar_rel_idx = config_data.get("filepath_polar_rel_idx")
+    len_k = config_data.get("info_bit_length")
+    snr_start=config_data.get("snr_start")
+    snr_end=config_data.get("snr_end")
+    snr_step=config_data.get("snr_step")
+    num_frames=config_data.get("num_frames")
+    num_errors=config_data.get("num_errors")
+    num_max_fr=config_data.get("num_max_fr")
+    qbits_enable=config_data.get("qbits_enable")
+    qbits_chnl=config_data.get("qbits_chnl")
+    qbits_intl=config_data.get("qbits_intl")
+    qbits_frac=config_data.get("qbits_frac")
+    plot_enable=config_data.get("plot_enable")
+    save_output=config_data.get("save_output")
+    path_output = f"SC_{os.path.splitext(os.path.basename(filepath_polar_rel_idx))[0]}_k{len_k}.out"
+    lutsim_enable=config_data.get("lutsim_enable")
+    en_r0=config_data.get("fast_r0_enable")
+    en_r1=config_data.get("fast_r1_enable")
+    en_rep=config_data.get("fast_rep_enable")
+    en_spc=config_data.get("fast_spc_enable")
+    en_0011=config_data.get("fast_0011_enable")
+    en_0101=config_data.get("fast_01011_enable")
+    r0_size=config_data.get("fast_r0_max_size")
+    r1_size=config_data.get("fast_r1_max_size")
+    rep_size=config_data.get("fast_rep_max_size")
+    spc_size=config_data.get("fast_spc_max_size")
+
     return Sim(
-        filepath_polar_rel_idx = config_data.get("filepath_polar_rel_idx"),
-        len_k         = config_data.get("info_bit_length"),
-        snr_start     = config_data.get("snr_start"),
-        snr_end       = config_data.get("snr_end"),
-        snr_step      = config_data.get("snr_step"),
-        num_frames    = config_data.get("num_frames"),
-        num_errors    = config_data.get("num_errors"),
-        num_max_fr    = config_data.get("num_max_fr"),
-        qbits_enable  = config_data.get("qbits_enable"),
-        qbits_chnl    = config_data.get("qbits_chnl"),
-        qbits_intl    = config_data.get("qbits_intl"),
-        qbits_frac    = config_data.get("qbits_frac"),
-        plot_enable   = config_data.get("plot_enable"),
-        lutsim_enable = config_data.get("lutsim_enable"),
-        en_r0         = config_data.get("fast_r0_enable"),
-        en_r1         = config_data.get("fast_r1_enable"),
-        en_rep        = config_data.get("fast_rep_enable"),
-        en_spc        = config_data.get("fast_spc_enable"),
-        en_0011       = config_data.get("fast_0011_enable"),
-        en_0101       = config_data.get("fast_01011_enable"),
-        r0_size       = config_data.get("fast_r0_max_size"),
-        r1_size       = config_data.get("fast_r1_max_size"),
-        rep_size      = config_data.get("fast_rep_max_size"),
-        spc_size      = config_data.get("fast_spc_max_size")
+        filepath_polar_rel_idx = filepath_polar_rel_idx,
+        len_k                  = len_k,
+        snr_start              = snr_start,
+        snr_end                = snr_end,
+        snr_step               = snr_step,
+        num_frames             = num_frames,
+        num_errors             = num_errors,
+        num_max_fr             = num_max_fr,
+        qbits_enable           = qbits_enable,
+        qbits_chnl             = qbits_chnl,
+        qbits_intl             = qbits_intl,
+        qbits_frac             = qbits_frac,
+        plot_enable            = plot_enable,
+        save_output            = save_output,
+        path_output            = path_output,
+        lutsim_enable          = lutsim_enable,
+        en_r0                  = en_r0,
+        en_r1                  = en_r1,
+        en_rep                 = en_rep,
+        en_spc                 = en_spc,
+        en_0011                = en_0011,
+        en_0101                = en_0101,
+        r0_size                = r0_size,
+        r1_size                = r1_size,
+        rep_size               = rep_size,
+        spc_size               = spc_size
     )
