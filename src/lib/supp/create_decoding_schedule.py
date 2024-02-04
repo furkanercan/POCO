@@ -200,7 +200,8 @@ def create_special_nodes(vec_dec_sch_fast, vec_dec_sch_size, vec_dec_sch_depth, 
             there_is_still_hope = False
 
 
-def create_decoding_schedule(sim, vec_frozen, sch_limit):
+def create_decoding_schedule(sim, vec_frozen):
+    sch_limit = sim.len_logn
     dec_alg = "Fast-SSC"
     vec_dec_sch_init = ['F', 'H', 'G', 'H', 'C']
     vec_dec_sch = []

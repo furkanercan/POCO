@@ -28,8 +28,8 @@ def generate_sim_header(sim):
             file_o.write(header + "\n")
     return header
 
-def report_sim_stats(sim, nsnr, len_k, time_elapsed, temp, status_msg, prev_status_msg):
-    ber =  sim.bit_error[nsnr]/(sim.frame_count[nsnr]*len_k)
+def report_sim_stats(sim, nsnr, time_elapsed, temp, status_msg, prev_status_msg):
+    ber =  sim.bit_error[nsnr]/(sim.frame_count[nsnr]*sim.len_k)
     bler = sim.frame_error[nsnr]/sim.frame_count[nsnr]
     iter = 1
 
@@ -37,12 +37,14 @@ def report_sim_stats(sim, nsnr, len_k, time_elapsed, temp, status_msg, prev_stat
     status_msg = f"{sim.snr_points[nsnr]:.3e}   {ber:.5e}   {bler:.5e}   {iter:.2e}   {sim.frame_count[nsnr]:.2e}   {sim.frame_error[nsnr]:.2e}   {time_elapsed}"
     status_pad = ' ' * max(0, len(prev_status_msg) - len(status_msg))
 
-    if(temp == 1):
-        print(status_msg + status_pad, end='\r', flush=True)
+    if temp == 1:
+        end_char = '\r'
     else:
-        print(status_msg + status_pad, end='\n', flush=True)
+        end_char = '\n'
         if sim.save_output == 1:
             with open(sim.path_output, 'a') as file_o:
                 file_o.write(status_msg + "\n")
+
+    print(status_msg + status_pad, end=end_char, flush=True)
             
     return status_msg
