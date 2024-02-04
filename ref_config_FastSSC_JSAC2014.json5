@@ -1,7 +1,9 @@
 {
     "_comments": [
-        "This is the default configuration file for the script.",
-        "Refer to ref_config_*.json5 files in the root directory for specific configurations with reference information."
+        "This is a reference configuration file for:",
+        "Sarkis et al., Fast Polar Decoders: Algorithm and Implementation, JSAC 2014 ",
+        "DOI: 10.1109/JSAC.2014.140514",
+        "Please cite according to above reference when using this tool for publishing"
     ],
     "simulation": {
         "code": {
@@ -10,7 +12,7 @@
         },
         "snr": {
             "start": 1,
-            "end": 3,
+            "end": 4,
             "step": 0.5
         },
         "sim": {
@@ -38,10 +40,10 @@
             "0101": 0
         },
         "fast_max_size": {
-            "r0": 1024,
-            "r1": 1024,
-            "rep": 1024,
-            "spc": 1024
+            "r0": 256,
+            "r1": 256,
+            "rep": 256,
+            "spc": 256
         }
     }
 }

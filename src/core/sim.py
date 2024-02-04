@@ -1,5 +1,5 @@
 """
-File: self.py
+File: sim.py
 Author: Furkan Ercan
 Date: January 6, 2024
 Description: Main script to run SC decoding for Polar Codes
