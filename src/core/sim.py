@@ -32,49 +32,56 @@ from . import CONFIG
 class Simulation:
     def __init__(self):
         # Access configuration using CONFIG
-        self.filepath_polar_rel_idx         = CONFIG.get('filepath_polar_rel_idx', "src/lib/ecc/polar/3gpp/n1024_3gpp.pc")
-        self.vec_polar_rel_idx  = readfile_polar_rel_idx(self.filepath_polar_rel_idx)
+        code_config             = CONFIG.get('code', {})
+        self.file_polar         = code_config.get('polar_file', "src/lib/ecc/polar/3gpp/n1024_3gpp.pc")
+        self.vec_polar_rel_idx  = readfile_polar_rel_idx(self.file_polar)
         self.len_n              = len(self.vec_polar_rel_idx)
-        self.len_k              = CONFIG.get('info_bit_length', 512)
+        self.len_k              = code_config.get('info_bit_length', 512)
         self.len_logn           = int(math.log2(self.len_n))
         
-        self.snr_start          = CONFIG.get('snr_start', 1)
-        self.snr_end            = CONFIG.get('snr_end', 2)
-        self.snr_step           = CONFIG.get('snr_step', 1)
+        snr_config              = CONFIG.get('snr', {})
+        self.snr_start          = snr_config.get('start', 1)
+        self.snr_end            = snr_config.get('end', 2)
+        self.snr_step           = snr_config.get('step', 1)
         self.snr_points         = np.arange(self.snr_start, self.snr_end + self.snr_step, self.snr_step, dtype=float)
         self.len_simpoints      = len(self.snr_points)
         
-        self.num_frames         = CONFIG.get('num_frames', 10000)
-        self.num_errors         = CONFIG.get('num_errors', 50)
-        self.num_max_fr         = CONFIG.get('num_max_fr', 1000000)
+        sim_config              = CONFIG.get('sim', {})
+        self.num_frames         = sim_config.get('num_frames', 10000)
+        self.num_errors         = sim_config.get('num_errors', 50)
+        self.num_max_fr         = sim_config.get('num_max_fr', 1000000)
         
-        self.qbits_enable       = CONFIG.get('qbits_enable', 0)
-        self.qbits_chnl         = CONFIG.get('qbits_chnl', 5)
-        self.qbits_intl         = CONFIG.get('qbits_intl', 6)
-        self.qbits_frac         = CONFIG.get('qbits_frac', 1)
+        quant_config            = CONFIG.get('quant', {})
+        self.qbits_enable       = quant_config.get('enable', 0)
+        self.qbits_chnl         = quant_config.get('bits_chnl', 5)
+        self.qbits_intl         = quant_config.get('bits_intl', 6)
+        self.qbits_frac         = quant_config.get('bits_frac', 1)
         self.quant_step         =    2 **  self.qbits_frac
         self.quant_chnl_upper   = (  2 ** (self.qbits_chnl -1) - 1)/self.quant_step
         self.quant_chnl_lower   = (-(2 ** (self.qbits_chnl -1)))//  self.quant_step
         self.quant_intl_max     = (  2 ** (self.qbits_intl -1) - 1)/self.quant_step
         self.quant_intl_min     = (-(2 ** (self.qbits_intl -1)))//  self.quant_step
         
-        self.plot_enable        = CONFIG.get('plot_enable', 1)
-        self.lutsim_enable      = CONFIG.get('lutsim_enable', 0)
-        self.save_output        = CONFIG.get('save_output', 1)
-        self.path_output        = f"SC_{os.path.splitext(os.path.basename(self.filepath_polar_rel_idx))[0]}_k{self.len_k}.out"
-        self.path_fig_output    = f"SC_{os.path.splitext(os.path.basename(self.filepath_polar_rel_idx))[0]}_k{self.len_k}.png"
+        save_config             = CONFIG.get('plot_save', {})
+        self.plot_enable        = save_config.get('plot_enable', 1)
+        self.lutsim_enable      = save_config.get('lutsim_enable', 0)
+        self.save_output        = save_config.get('save_output', 1)
+        self.path_output        = f"SC_{os.path.splitext(os.path.basename(self.file_polar))[0]}_k{self.len_k}.out"
+        self.path_fig_output    = f"SC_{os.path.splitext(os.path.basename(self.file_polar))[0]}_k{self.len_k}.png"
         
-        self.en_r0     = CONFIG.get('fast_r0_enable', 1)
-        self.en_r1     = CONFIG.get('fast_r1_enable', 1)
-        self.en_rep    = CONFIG.get('fast_rep_enable', 1)
-        self.en_spc    = CONFIG.get('fast_spc_enable', 1)
-        self.en_0011   = CONFIG.get('fast_0011_enable', 1)
-        self.en_0101   = CONFIG.get('fast_0101_enable', 1)
+        fast_enable_config = CONFIG.get('fast_enable', {})
+        self.en_r0         = fast_enable_config.get('r0', 1)
+        self.en_r1         = fast_enable_config.get('r1', 1)
+        self.en_rep        = fast_enable_config.get('rep', 1)
+        self.en_spc        = fast_enable_config.get('spc', 1)
+        self.en_0011       = fast_enable_config.get('0011', 1)
+        self.en_0101       = fast_enable_config.get('0101', 1)
         
-        self.r0_size   = CONFIG.get('fast_r0_max_size', 1024)
-        self.r1_size   = CONFIG.get('fast_r1_max_size', 1024)
-        self.rep_size  = CONFIG.get('fast_rep_max_size', 1024)
-        self.spc_size  = CONFIG.get('fast_spc_max_size', 1024)
+        fast_max_size_config = CONFIG.get('fast_max_size', {})
+        self.r0_size         = fast_max_size_config.get('r0', 1024)
+        self.r1_size         = fast_max_size_config.get('r1', 1024)
+        self.rep_size        = fast_max_size_config.get('rep', 1024)
+        self.spc_size        = fast_max_size_config.get('spc', 1024)
 
         self.frame_count        = np.zeros(len(self.snr_points), dtype=int)
         self.bit_error          = np.zeros(len(self.snr_points), dtype=int)

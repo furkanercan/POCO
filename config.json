@@ -1,33 +1,43 @@
 {
-    "filepath_polar_rel_idx" : "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
-    "info_bit_length" : 512,
-
-    "snr_start" : 1,
-    "snr_end" : 3,
-    "snr_step" : 0.25,
-    
-    "num_frames" : 10000,
-    "num_errors" : 50,
-    "num_max_fr" : 1000000,
-
-    "qbits_enable" : 0,
-    "qbits_chnl"   : 5,
-    "qbits_intl"   : 6,
-    "qbits_frac"   : 1,
-
-    "plot_enable"  : 1,
-    "save_output"  : 1,
-
-    "fast_r0_enable" : 1,
-    "fast_r1_enable" : 1,
-    "fast_rep_enable" : 1,
-    "fast_spc_enable" : 1,
-    "fast_0011_enable" : 0,
-    "fast_0101_enable" : 0,
-
-    "fast_r0_max_size" : 1024,
-    "fast_r1_max_size" : 1024,
-    "fast_rep_max_size" : 1024,
-    "fast_spc_max_size" : 1024
-
+    "simulation": {
+        "code": {
+            "polar_file": "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
+            "len_k": 512
+        },
+        "snr": {
+            "start": 1,
+            "end": 3,
+            "step": 0.5
+        },
+        "sim": {
+            "num_frames": 10000,
+            "num_errors": 50,
+            "num_max_fr": 1000000
+        },
+        "quant": {
+            "enable": 0,
+            "bits_chnl": 5,
+            "bits_intl": 6,
+            "bits_frac": 1
+        },
+        "save": {
+            "plot_enable": 1,
+            "lutsim_enable": 0,
+            "save_output": 1
+        },
+        "fast_enable": {
+            "r0": 1,
+            "r1": 1,
+            "rep": 1,
+            "spc": 1,
+            "0011": 0,
+            "0101": 0
+        },
+        "fast_max_size": {
+            "r0": 1024,
+            "r1": 1024,
+            "rep": 1024,
+            "spc": 1024
+        }
+    }
 }
