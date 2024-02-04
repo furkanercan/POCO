@@ -73,36 +73,42 @@ The simulation setup is carried out using the `config.json` file. An example sna
 
 ```json
 {
-    "filepath_polar_rel_idx" : "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
-    "info_bit_length" : 512,
-
-    "snr_start" : 1,
-    "snr_end" : 3,
-    "snr_step" : 0.25,
-    
-    "num_frames" : 10000,
-    "num_errors" : 50,
-    "num_max_fr" : 1000000,
-
-    "qbits_enable" : 0,
-    "qbits_chnl"   : 5,
-    "qbits_intl"   : 6,
-    "qbits_frac"   : 1,
-
-    "plot_enable"  : 0,
-
-    "fast_r0_enable" : 1,
-    "fast_r1_enable" : 1,
-    "fast_rep_enable" : 1,
-    "fast_spc_enable" : 1,
-    "fast_0011_enable" : 0,
-    "fast_0101_enable" : 0,
-
-    "fast_r0_max_size" : 1024,
-    "fast_r1_max_size" : 1024,
-    "fast_rep_max_size" : 1024,
-    "fast_spc_max_size" : 1024
+    "_comments": [
+        "This is the default configuration file for the script.",
+        "Refer to ref_config_*.json5 files in the root directory for specific configurations with reference information."
+    ],
+    "simulation": {
+        "code": {
+            "polar_file": "src/lib/ecc/polar/3gpp/n1024_3gpp.pc",
+            "len_k": 512
+        },
+        "snr": {
+            "start": 1,
+            ...
+        },
+        "sim": {
+            "num_frames": 10000,
+            ...
+        },
+        "quant": {
+            "enable": 0,
+            "bits_chnl": 5,
+            ...
+        },
+        "save": {
+            "plot_enable": 1,
+            ...
+        },
+        "fast_enable": {
+            "r0": 1,
+            ...
+        },
+        "fast_max_size": {
+            ...
+        }
+    }
 }
+
 ```
 
 The following example is a terminal output of POCO with 5G polar codes of N=1024, K=512:
@@ -172,6 +178,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-If you find this project helpful or use it in your work, we kindly ask that you give credit by including the following attribution in your documentation or project credits:
+If you find this project useful, please consider citing it:
 
-The results of this work is obtained through POCO, developed by Furkan Ercan.
+```bibtex
+@misc{ProjectPOCO,
+  author = {Furkan Ercan},
+  title = {POCO: A Fast SC Polar Decoder},
+  year = {2024},
+  howpublished = {\url{https://github.com/furkanercan/POCO}},
+}
+```
